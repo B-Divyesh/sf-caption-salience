@@ -1,10 +1,15 @@
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify(execFile);
 
 const output = resolve('dist/site');
 const pages = ['demo', 'player', 'privacy', 'terms', 'install'];
 const shellPages = ['/', ...pages.map((page) => `/${page}`)];
 const html = await readFile(resolve(output, 'index.html'), 'utf8');
+const packageInfo = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
 const assets = await readdir(resolve(output, 'assets'));
 const appAssets = assets.filter((name) => /^app-[a-zA-Z0-9_-]+\.(?:js|css)$/.test(name));
 
@@ -54,6 +59,20 @@ self.addEventListener('fetch', (event) => {
 `;
 
 await writeFile(resolve(output, 'sw.js'), serviceWorker);
+
+// This travels with every Tauri bundle, so release verification can prove that
+// a downloadable desktop artifact was built from the same commit as the site.
+let gitCommit = 'unknown';
+try {
+  gitCommit = (await execFileAsync('git', ['rev-parse', 'HEAD'])).stdout.trim();
+} catch {
+  // Source archives do not include .git. Keep the build usable while making
+  // the missing provenance explicit rather than claiming a false identity.
+}
+await writeFile(resolve(output, 'release-identity.json'), `${JSON.stringify({
+  appVersion: process.env.npm_package_version || packageInfo.version,
+  gitCommit
+}, null, 2)}\n`);
 
 // A prior build can leave an obsolete fixed entry point behind if the output
 // directory was copied rather than cleaned by Vite.

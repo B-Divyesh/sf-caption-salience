@@ -59,7 +59,7 @@ function footer(): string {
   return `<footer>
     <p>Caption emphasis for people who hear some words and miss others.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-route>Privacy</a><a href="/terms" data-route>Terms</a><a href="https://hello-factory.sociobot.in" rel="external">Built by Param Factory <span class="sr-only">(external site)</span></a></nav>
-    <p class="build">v0.1.1 · Original generated artwork</p>
+    <p class="build">v0.1.2 · Original generated artwork</p>
   </footer>`;
 }
 
@@ -103,8 +103,8 @@ function playerPage(): string {
   const isEmpty = cues.length === 0;
   return `${demoBanner()}${header()}<main id="main" class="app-main">
     <section class="player-heading"><div><p class="eyebrow">Caption player</p><h1 id="player-title" tabindex="-1">Make each caption easier to follow</h1></div><div class="file-actions">
-      <label class="primary file-label" for="caption-file">Open SRT or WebVTT</label><input class="sr-only" id="caption-file" type="file" accept=".srt,.vtt,text/vtt,application/x-subrip">
-      <label class="secondary file-label" for="audio-file">Add local audio</label><input class="sr-only" id="audio-file" type="file" accept="audio/*">
+      <label class="primary file-label">Open SRT or WebVTT<input class="sr-only" id="caption-file" type="file" accept=".srt,.vtt,text/vtt,application/x-subrip"></label>
+      <label class="secondary file-label">Add local audio<input class="sr-only" id="audio-file" type="file" accept="audio/*"></label>
       <button class="secondary" id="mic-button">${recognition ? 'Stop microphone' : 'Use microphone'}</button>
     </div></section>
     <p id="file-status" class="status-line" role="status">${demoMode ? 'Sample conversation loaded. Demo changes are not saved.' : 'No caption file is open. Files are read only on this device.'}</p>
@@ -218,7 +218,16 @@ const routes: Record<string, { title: string; render: () => string }> = {
   '/terms': { title: 'Terms — Caption Salience', render: () => legalPage('terms') }
 };
 
-function navigate(path: string, push = true): void {
+type RouteRenderOptions = {
+  focusHeading?: boolean;
+  scrollY?: number;
+};
+
+function saveScrollPosition(): void {
+  history.replaceState({ ...(history.state || {}), scrollY: window.scrollY }, '', location.href);
+}
+
+function navigate(path: string): void {
   stopPlayback();
   const previousDemo = demoMode;
   demoMode = path === '/demo';
@@ -228,11 +237,12 @@ function navigate(path: string, push = true): void {
     currentTime = 0;
     preferences = loadPreferences();
   }
-  if (push) history.pushState({}, '', path);
-  renderRoute();
+  saveScrollPosition();
+  history.pushState({ scrollY: 0 }, '', path);
+  renderRoute({ focusHeading: true, scrollY: 0 });
 }
 
-function renderRoute(): void {
+function renderRoute(options: RouteRenderOptions = {}): void {
   const route = routes[location.pathname];
   document.title = route?.title || 'Page not found — Caption Salience';
   document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', `https://caption-salience.sociobot.in${route ? location.pathname : '/404'}`);
@@ -241,7 +251,11 @@ function renderRoute(): void {
   if (location.pathname === '/demo' || location.pathname === '/player') bindPlayer();
   if (location.pathname === '/') bindHome();
   if (location.pathname === '/install') loadRelease();
-  requestAnimationFrame(() => document.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true }));
+  requestAnimationFrame(() => {
+    const heading = document.querySelector<HTMLElement>('h1');
+    if (options.focusHeading) heading?.focus({ preventScroll: true });
+    if (typeof options.scrollY === 'number') window.scrollTo({ top: options.scrollY, left: 0, behavior: 'instant' });
+  });
 }
 
 function bindGlobal(): void {
@@ -464,7 +478,9 @@ function acceptReturnedLicense(): void {
   void verifyLicense(token);
 }
 
-window.addEventListener('popstate', renderRoute);
+window.addEventListener('popstate', (event) => {
+  renderRoute({ focusHeading: true, scrollY: typeof event.state?.scrollY === 'number' ? event.state.scrollY : 0 });
+});
 window.addEventListener('keydown', (event) => {
   if (!['/demo', '/player'].includes(location.pathname) || (event.target as HTMLElement)?.matches('input, textarea')) return;
   if (event.code === 'Space') { event.preventDefault(); if (cues.length) togglePlayback(); }
@@ -484,7 +500,7 @@ if (storedLicense) {
 }
 demoMode = location.pathname === '/demo';
 if (demoMode) resetDemoState();
-renderRoute();
+renderRoute({ focusHeading: true, scrollY: window.scrollY });
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined));

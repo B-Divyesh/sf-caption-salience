@@ -26,7 +26,7 @@ a { color: var(--paper); text-underline-offset: .2em; text-decoration-thickness:
 a:hover { color: var(--signal); }
 button, .primary, .secondary, .file-label { min-height: 44px; }
 button { color: inherit; }
-button:focus-visible, a:focus-visible, input:focus-visible, label[for]:focus-within { outline: 3px solid var(--signal); outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, .file-label:focus-within { outline: 3px solid var(--signal); outline-offset: 3px; }
 h1:focus { outline: none; }
 h1, h2, h3, .eyebrow, button, nav, label, .wordmark, .speaker-chip, time, .panel-label, .plain-facts, .build, figcaption { font-family: 'Trebuchet MS', 'Avenir Next', Arial, sans-serif; }
 h1, h2, h3 { margin: 0; line-height: 1.06; letter-spacing: -.025em; }

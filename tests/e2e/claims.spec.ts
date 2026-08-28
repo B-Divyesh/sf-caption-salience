@@ -159,6 +159,43 @@ test('invalid and empty files explain the next step', async ({ page }) => {
   await expect(page.getByRole('status')).toContainText('Choose a valid SRT or WebVTT file');
 });
 
+test('keyboard focus on each file action is visible on its labeled control', async ({ page }) => {
+  await page.goto('/player');
+  await expect(page.getByRole('heading', { name: 'Make each caption easier to follow' })).toBeFocused();
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#caption-file')).toBeFocused();
+  const captionLabel = page.locator('label.file-label:has(#caption-file)');
+  await expect(captionLabel).toHaveCSS('outline-style', 'solid');
+  await expect(captionLabel).toHaveCSS('outline-width', '3px');
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#audio-file')).toBeFocused();
+  const audioLabel = page.locator('label.file-label:has(#audio-file)');
+  await expect(audioLabel).toHaveCSS('outline-style', 'solid');
+  await expect(audioLabel).toHaveCSS('outline-width', '3px');
+});
+
+test('client navigation reveals the destination heading and restores scroll on Back', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('footer').scrollIntoViewIfNeeded();
+  const homeScrollY = await page.evaluate(() => window.scrollY);
+  expect(homeScrollY).toBeGreaterThan(0);
+
+  await page.getByRole('link', { name: 'Privacy', exact: true }).last().click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(page.getByRole('heading', { name: 'Keep captions on your device' })).toBeFocused();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  const privacyHeading = await page.getByRole('heading', { name: 'Keep captions on your device' }).boundingBox();
+  expect(privacyHeading).not.toBeNull();
+  expect(privacyHeading!.y).toBeGreaterThanOrEqual(0);
+  expect(privacyHeading!.y + privacyHeading!.height).toBeLessThanOrEqual(844);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(homeScrollY - 2);
+});
+
 test('pages have no serious accessibility violations', async ({ page }) => {
   for (const route of ['/', '/demo', '/privacy', '/terms', '/install']) {
     await page.goto(route);
@@ -235,4 +272,9 @@ test('release build hashes entry assets, defines immutable caching, and preserve
   const serviceWorker = await readFile(path.join(site, 'sw.js'), 'utf8');
   for (const asset of appAssets) expect(serviceWorker).toContain(`/assets/${asset}`);
   await expect(readFile(path.join(site, '404.html'), 'utf8')).resolves.toContain('/assets/app-');
+
+  const identity = JSON.parse(await readFile(path.join(site, 'release-identity.json'), 'utf8')) as { appVersion: string; gitCommit: string };
+  const packageInfo = JSON.parse(await readFile(path.join(process.cwd(), 'package.json'), 'utf8')) as { version: string };
+  expect(identity.appVersion).toBe(packageInfo.version);
+  expect(identity.gitCommit).toMatch(/^[0-9a-f]{40}$/);
 });
