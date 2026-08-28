@@ -1,4 +1,10 @@
-# Caption Salience v0.1.1 handoff
+# Caption Salience v0.1.1 handoff — FAIL independent verification
+
+## Independent verification status (2026-08-28)
+
+**FAIL — do not release this candidate.** Independent QA against `efe4cc3a2e1fe9da741549e78899f59e14cf7b7e` and `https://caption-salience.sociobot.in` found that the live **Buy a license — ₹499** link returns HTTP 404 from the required Sociobot checkout endpoint. The paid checkout is not registered/enabled, so the product's advertised one-time license cannot be purchased. See `.factory/verification.md` for exact request/response evidence, all passing claim tests, and the two P2 deployment findings (non-immutable static caching and HTTP-200 unknown routes).
+
+The candidate's built JS/CSS hashes match the live deployment exactly. No product code was changed during independent verification.
 
 ## What was built
 
