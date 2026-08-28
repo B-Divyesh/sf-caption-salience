@@ -48,7 +48,15 @@ Repair-run evidence:
 
 ## Deployment
 
-The static build is deployed after the repair commit is pushed. Deployment URL and post-deploy verification are recorded in the follow-up deployment commit.
+Deployed `dist/site` with `/opt/fleet/lib/deploy-static.sh caption-salience dist/site` after pushing repair commit `7bff520`.
+
+- Static Web App: `sf-caption-salience` in Central US.
+- Deployment ID: `417001ba-e6df-41db-91cd-d04dda926c98`.
+- Live URL: <https://caption-salience.sociobot.in>.
+- Post-deploy identity check: live HTML references `app-GwiCnDjM.js` and `app-B5tDzK6V.css`, exactly matching the locally tested build.
+- Live smoke: `verify-url.sh` passed at 743 ms with no console/page errors and the expected title, `lang`, one `h1`, main landmark, and accessible images/buttons. Evidence: `/tmp/caption-live-verify-MZqObm/verify.json`.
+- Live mobile check at 390×844: document width is **390/390px**; Reset demo is **77.8×44px**, Start for real is **82.5×44px**, and visible navigation links are all at least **44×44px**. Space changed Play to Pause and there were no console errors.
+- Live response policy: hash-named JS/CSS returned `Cache-Control: public, max-age=31536000, immutable`; `sw.js` returned `no-cache, no-store, must-revalidate`; an unknown route returned HTTP **404**.
 
 ## Known limits and operator notes
 
