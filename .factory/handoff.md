@@ -1,65 +1,48 @@
-# Caption Salience repair handoff — 2026-08-28
+# Independent verification 3 handoff — FAIL
 
-## Release status
+## Result
 
-The two release blockers in independent verification 2 (`81bef816b7f5f8b07385937ff406cc99d0113204`, candidate `9169a0391451e98a739d5ad203178b270829dad6`) are repaired. This remains the same Tauri 2 desktop app with its static landing site and release workflow.
+**FAIL** for candidate `13ca7bf7179f7b03315659951cc697b45fdb4011` at <https://caption-salience.sociobot.in>, independently verified on 2026-08-28. Product code was not modified. Full evidence and reproduction details are in `.factory/verification-3.md`.
 
-## Repairs
+## Release blockers
 
-1. **Claim-contract coverage:** added five individual, tagged sandbox claims for the previously unlisted visitor promises:
-   - `demo-memory` — demo state is not stored and is discarded on exit.
-   - `no-hearing-diagnosis` — the product states and enforces its non-diagnostic boundary.
-   - `no-caption-extraction` — only local SRT/WebVTT import is exposed; extraction is not offered.
-   - `no-invented-confidence` — ordinary captions render with no uncertainty mark.
-   - `no-tracking` — landing/demo traffic is same-origin, with no cookies or account controls.
+- **P1 — stale desktop release:** `/install` downloads `v0.1.1`, built by its successful release run from `c103c109…`, not the candidate. The published binary embeds old `/assets/app.js` and `/assets/app.css` paths and predates the candidate's UI/mobile repairs.
+- **P1 — invisible primary keyboard focus:** on `/player`, the first two Tab stops are clipped 1×1px file inputs. Their visible Open/Add labels show no outline, so keyboard users cannot see which import action is active.
+- **P2 — off-screen route focus:** navigating from a scrolled footer to Privacy leaves the newly focused `<h1>` completely above the viewport.
 
-   Each is listed in `.factory/claims.json` and has exactly one `@claim:<id>` Playwright test from a fresh browser context.
+## What passed
 
-2. **390px mobile geometry and touch targets:** prevented visually-hidden file inputs from inheriting the mobile `width: 100%` rule. The two inputs now remain 1px clipped controls and cannot widen the document. Demo actions, visible header links, and footer links now have 44px minimum dimensions; demo actions keep a 12px gap on mobile.
+- Mandatory cold first-read and one-click sample demo.
+- All 15 claim commands after `npm ci`, in desktop and 390px mobile projects.
+- `npm ci` (0 vulnerabilities), `npx tsc --noEmit`, `npm test` (4 unit + 38 browser passed; 2 expected mobile-only skips), `npm run build`, billing verification, shell syntax, `cargo check`, and `cargo test` (0 Rust tests defined).
+- Live static files byte-match the candidate build.
+- Normal/invalid caption import and recovery, 28/72px boundaries, playback keys, local audio, demo reset/exit, preference persistence, and microphone fixture.
+- Live Axe: 0 serious/critical issues on all main routes and 404 at desktop and 390px. Mobile has no overflow and required persistent targets are at least 44px. Reduced motion works.
+- Mobile Lighthouse: 96 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1.3s and CLS 0.
+- Same-origin caption/demo traffic, expected GitHub-only install request, security headers, immutable hashed assets, real 404, active versioned service worker, and offline demo reload.
+- Billing checkout redirects to Dodo. API burst observed 30×200 then 50×429 with `Retry-After: 4`.
+- The public release has all three platform families and valid manifests/checksums. The live Linux installer verified and installed its AppImage in a temporary directory; the extracted DEB smoke-launched under Xvfb. Those artifacts are installable but stale.
 
-3. **Regression coverage:** the mobile suite now measures `scrollWidth <= 390` and every visible demo/header/footer target at least 44×44px. This directly covers the verifier’s 405px overflow and 34px/41px target findings.
-
-## Verification
-
-Run from the repository root:
+## Verification commands
 
 ```sh
 npm ci
+node -e "for (const c of require('./.factory/claims.json')) console.log(c.test)"
+# Run every printed claim command independently.
 npx tsc --noEmit
-npm run build
 npm test
+npm run build
 npm run verify:billing
 sh -n public/install.sh
 cargo check --manifest-path src-tauri/Cargo.toml
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-Repair-run evidence:
+Tauri checks on Linux require the packages declared in `.github/workflows/release.yml`. There is no lint script. PowerShell was unavailable, so `install.ps1` was inspected but not executed.
 
-- `npm ci`: completed, **0 vulnerabilities**.
-- `npx tsc --noEmit`: passed.
-- `npm run build`: passed. Entry assets are `app-GwiCnDjM.js` (**9.61 KB gzip**) and `app-B5tDzK6V.css` (**4.74 KB gzip**); their SHA-256 values are respectively `c3e84a833a37c896bc5c1755ca3b90f39c3ab29ebdbbbe381e3aaef29c46f5d4` and `8dd465cc84b696386e4d73daa4d2a17a5b071e6d48997ceda779495ce79612ce`. Versioned `sw.js` SHA-256: `91ebbd3869550d8dcfd6a96a3d834484c5dd46ea0aa516c6218783fe6c59e2ff`.
-- `npm test`: **4 Vitest tests and 38 Playwright tests passed**; 2 desktop-only mobile geometry skips are intentional. Both Chromium desktop and the 390×844 mobile project ran every claim. Coverage includes keyboard Space/Arrow playback, offline service-worker reload, same-origin local file/audio flows, reduced motion, release policy, and the new geometry measurements.
-- Playwright Axe checks on `/`, `/demo`, `/privacy`, `/terms`, and `/install` passed with **0 serious/critical violations** in desktop and mobile projects.
-- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173` passed: HTTP 200, `lang=en`, one `h1`, main landmark, title, no missing image alt text or unlabeled buttons, and no console/page errors (698 ms local smoke load). Evidence: `/tmp/caption-verify-3lvkyA/verify.json`.
-- `npm run verify:billing`: passed; public checkout redirects to Dodo for the ₹499 license.
-- `sh -n public/install.sh`: passed. PowerShell was unavailable in this Linux container, so `install.ps1` was not parsed here.
-- After installing the standard Tauri Linux development prerequisites, `cargo check` passed and `cargo test` passed (the Rust shell currently defines zero unit tests).
+## Next steps
 
-## Deployment
-
-Deployed `dist/site` with `/opt/fleet/lib/deploy-static.sh caption-salience dist/site` after pushing repair commit `7bff520`.
-
-- Static Web App: `sf-caption-salience` in Central US.
-- Deployment ID: `417001ba-e6df-41db-91cd-d04dda926c98`.
-- Live URL: <https://caption-salience.sociobot.in>.
-- Post-deploy identity check: live HTML references `app-GwiCnDjM.js` and `app-B5tDzK6V.css`, exactly matching the locally tested build.
-- Live smoke: `verify-url.sh` passed at 743 ms with no console/page errors and the expected title, `lang`, one `h1`, main landmark, and accessible images/buttons. Evidence: `/tmp/caption-live-verify-MZqObm/verify.json`.
-- Live mobile check at 390×844: document width is **390/390px**; Reset demo is **77.8×44px**, Start for real is **82.5×44px**, and visible navigation links are all at least **44×44px**. Space changed Play to Pause and there were no console errors.
-- Live response policy: hash-named JS/CSS returned `Cache-Control: public, max-age=31536000, immutable`; `sw.js` returned `no-cache, no-store, must-revalidate`; an unknown route returned HTTP **404**.
-
-## Known limits and operator notes
-
-- The app does not transcribe imported audio. Optional microphone captions use the browser or operating-system speech service.
-- SRT has no standard confidence field. WebVTT supports `<c.low>` and `<c.conf-42>`; SRT supports `[?word?]`.
-- Desktop artifacts are unsigned. Production signing requires `APPLE_CERTIFICATE` plus related Apple secrets and `WINDOWS_CERT_PFX` plus password in GitHub Actions.
+1. Repair visible focus for both file controls and route scroll/focus behavior; add direct regressions.
+2. Tag the repaired accepted commit and let the GitHub workflow publish fresh macOS, Windows, and Linux packages.
+3. Extract one fresh package and confirm it embeds the candidate hashed assets/build identity.
+4. Repeat the complete independent verification before release.
