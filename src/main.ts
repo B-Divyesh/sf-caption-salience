@@ -105,7 +105,7 @@ function playerPage(): string {
     <section class="player-heading"><div><p class="eyebrow">Caption player</p><h1 id="player-title" tabindex="-1">Make each caption easier to follow</h1></div><div class="file-actions">
       <label class="primary file-label" for="caption-file">Open SRT or WebVTT</label><input class="sr-only" id="caption-file" type="file" accept=".srt,.vtt,text/vtt,application/x-subrip">
       <label class="secondary file-label" for="audio-file">Add local audio</label><input class="sr-only" id="audio-file" type="file" accept="audio/*">
-      <button class="secondary" id="mic-button">Use microphone</button>
+      <button class="secondary" id="mic-button">${recognition ? 'Stop microphone' : 'Use microphone'}</button>
     </div></section>
     <p id="file-status" class="status-line" role="status">${demoMode ? 'Sample conversation loaded. Demo changes are not saved.' : 'No caption file is open. Files are read only on this device.'}</p>
     ${isEmpty ? emptyPlayer() : activePlayer()}

@@ -17,7 +17,9 @@
       "minWidth": 390,
       "minHeight": 620
     }],
-    "security": { "csp": null }
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.github.com https://api.sociobot.in; object-src 'none'; base-uri 'self'"
+    }
   },
   "bundle": {
     "active": true,
