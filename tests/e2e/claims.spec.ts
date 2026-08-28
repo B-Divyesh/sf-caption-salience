@@ -99,6 +99,59 @@ test('@claim:local-preferences keeps display settings in browser storage', async
   await expect(page.getByLabel('Caption size')).toHaveValue('60');
 });
 
+test('@claim:demo-memory keeps sample state out of browser storage and discards it on exit', async ({ page }) => {
+  await page.goto('/demo');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await page.getByLabel('Caption size').fill('60');
+  expect(await page.evaluate(() => localStorage.getItem('caption-salience:preferences'))).toBeNull();
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL(/\/player$/);
+  await expect(page.getByRole('heading', { name: 'Your captions will appear here' })).toBeVisible();
+  await expect(page.getByLabel('Caption size')).not.toBeVisible();
+});
+
+test('@claim:no-hearing-diagnosis states the diagnostic boundary and presents only caption controls', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('It does not diagnose hearing loss.')).toBeVisible();
+  await page.goto('/player');
+  await expect(page.getByRole('heading', { name: 'Your captions will appear here' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /diagnos/i })).toHaveCount(0);
+  await expect(page.getByRole('status')).toContainText('No caption file is open');
+});
+
+test('@claim:no-caption-extraction states the extraction boundary and limits imports to local caption files', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('It does not extract video or protected captions.')).toBeVisible();
+  await page.goto('/player');
+  await expect(page.locator('#caption-file')).toHaveAttribute('accept', /\.srt.*\.vtt/);
+  await expect(page.getByRole('button', { name: /extract/i })).toHaveCount(0);
+});
+
+test('@claim:no-invented-confidence leaves ordinary captions unmarked', async ({ page }) => {
+  await page.goto('/player');
+  await page.setInputFiles('#caption-file', {
+    name: 'ordinary.vtt',
+    mimeType: 'text/vtt',
+    buffer: Buffer.from('WEBVTT\n\n00:00:00.000 --> 00:00:03.000\nThe train is arriving now.\n')
+  });
+  await expect(page.locator('#caption-text')).toContainText('The train is arriving now.');
+  await expect(page.locator('#caption-text .uncertain')).toHaveCount(0);
+});
+
+test('@claim:no-tracking uses no outside requests, cookies, or account controls', async ({ page, context }) => {
+  const outside: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).origin !== 'http://127.0.0.1:4173') outside.push(request.url());
+  });
+  await page.goto('/');
+  await page.goto('/demo');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  expect(outside).toEqual([]);
+  expect(await context.cookies()).toEqual([]);
+  await expect(page.getByRole('button', { name: /account|sign in|log in/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /account|sign in|log in/i })).toHaveCount(0);
+});
+
 test('invalid and empty files explain the next step', async ({ page }) => {
   await page.goto('/player');
   await expect(page.getByRole('heading', { name: 'Your captions will appear here' })).toBeVisible();
@@ -121,6 +174,33 @@ test('mobile demo keeps controls visible at 390 pixels', async ({ page }, testIn
   await expect(page.getByLabel('Caption size')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('mobile persistent controls and navigation meet the 44px touch target requirement', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile');
+  await page.goto('/demo');
+  const demoTargetSizes = await page.locator('#reset-demo, #start-real, .site-header nav a').evaluateAll((elements) =>
+    elements.filter((element) => element.getClientRects().length > 0).map((element) => {
+      const { width, height } = element.getBoundingClientRect();
+      return { text: element.textContent?.trim(), width, height };
+    })
+  );
+  for (const target of demoTargetSizes) {
+    expect(target.width, `${target.text} width`).toBeGreaterThanOrEqual(44);
+    expect(target.height, `${target.text} height`).toBeGreaterThanOrEqual(44);
+  }
+  await page.locator('footer').scrollIntoViewIfNeeded();
+  const footerTargetSizes = await page.locator('footer nav a').evaluateAll((elements) =>
+    elements.map((element) => {
+      const { width, height } = element.getBoundingClientRect();
+      return { text: element.textContent?.trim(), width, height };
+    })
+  );
+  for (const target of footerTargetSizes) {
+    expect(target.width, `${target.text} width`).toBeGreaterThanOrEqual(44);
+    expect(target.height, `${target.text} height`).toBeGreaterThanOrEqual(44);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
 
 test('release build hashes entry assets, defines immutable caching, and preserves a real 404 response policy', async () => {

@@ -68,5 +68,40 @@
     "where": "privacy page, README",
     "test": "npm test -- --grep @claim:local-preferences",
     "sandbox": "fresh browser context; change the real-mode caption size, reload, and assert the saved value"
+  },
+  {
+    "id": "demo-memory",
+    "claim": "Demo sample data is not saved and is discarded when you leave",
+    "where": "demo banner, README, demo contract",
+    "test": "npm test -- --grep @claim:demo-memory",
+    "sandbox": "fresh browser context; change a demo setting, leave demo mode, and assert no demo setting or cue persists in real mode"
+  },
+  {
+    "id": "no-hearing-diagnosis",
+    "claim": "Does not diagnose hearing loss",
+    "where": "landing limits",
+    "test": "npm test -- --grep @claim:no-hearing-diagnosis",
+    "sandbox": "fresh browser context; assert the limits section states the boundary and the player exposes caption controls rather than a diagnosis result"
+  },
+  {
+    "id": "no-caption-extraction",
+    "claim": "Does not extract video or protected captions",
+    "where": "landing limits",
+    "test": "npm test -- --grep @claim:no-caption-extraction",
+    "sandbox": "fresh browser context; assert the stated boundary and that the only caption import control accepts local SRT and WebVTT files"
+  },
+  {
+    "id": "no-invented-confidence",
+    "claim": "Does not invent confidence scores",
+    "where": "landing limits, README",
+    "test": "npm test -- --grep @claim:no-invented-confidence",
+    "sandbox": "fresh browser context; upload an ordinary WebVTT fixture without confidence annotations and assert no uncertainty mark is rendered"
+  },
+  {
+    "id": "no-tracking",
+    "claim": "Has no analytics, advertising, accounts, or tracking cookies",
+    "where": "privacy page, README",
+    "test": "npm test -- --grep @claim:no-tracking",
+    "sandbox": "fresh browser context; visit landing and demo, assert all requests are same-origin and the browser has no cookies or account controls"
   }
 ]

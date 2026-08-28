@@ -66,7 +66,7 @@ function footer(): string {
 function demoBanner(): string {
   return demoMode ? `<aside class="demo-banner" aria-label="Demo status">
     <span><strong>Demo</strong> — sample data, nothing is saved</span>
-    <span><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="start-real">Start for real</button></span>
+    <span class="demo-actions"><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="start-real">Start for real</button></span>
   </aside>` : '';
 }
 
