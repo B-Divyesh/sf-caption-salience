@@ -1,6 +1,8 @@
 node_modules/
 dist/
-.env
+test-results/
+playwright-report/
+src-tauri/target/
 *.log
-graphify-out/
 .DS_Store
+graphify-out/

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "caption-import",
+    "claim": "Opens local SRT and WebVTT caption files",
+    "where": "landing page, player, README",
+    "test": "npm test -- --grep @claim:caption-import",
+    "sandbox": "fresh browser context; upload the shipped WebVTT fixture; assert two rendered cues"
+  },
+  {
+    "id": "supplied-uncertainty",
+    "claim": "Marks source-supplied uncertainty, speaker changes, and chosen terms separately",
+    "where": "landing preview, player, README",
+    "test": "npm test -- --grep @claim:supplied-uncertainty",
+    "sandbox": "fresh browser context at /demo; assert only the annotated token has uncertain semantics"
+  },
+  {
+    "id": "local-processing",
+    "claim": "Caption files stay on this device",
+    "where": "landing facts, player status, privacy page, README",
+    "test": "npm test -- --grep @claim:local-processing",
+    "sandbox": "fresh browser context at /demo; intercept the entire playback flow and assert all requests are same-origin"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "Works offline after the first visit",
+    "where": "landing facts, README",
+    "test": "npm test -- --grep @claim:offline-reload",
+    "sandbox": "fresh browser context at /demo; wait for the service worker, go offline, reload, and assert the player opens"
+  },
+  {
+    "id": "keyboard-playback",
+    "claim": "Playback works with Space and arrow keys",
+    "where": "player shortcut line, README",
+    "test": "npm test -- --grep @claim:keyboard-playback",
+    "sandbox": "fresh browser context at /demo; use Space and ArrowRight; assert playing state and five-second seek"
+  },
+  {
+    "id": "core-free",
+    "claim": "Core caption controls are free",
+    "where": "landing facts, paid tier, terms, README",
+    "test": "npm test -- --grep @claim:core-free",
+    "sandbox": "fresh browser context at /demo with no license; assert size, uncertainty, speaker, and chosen-term controls are available"
+  },
+  {
+    "id": "paid-profiles",
+    "claim": "A ₹499 one-time license adds up to five named setup profiles",
+    "where": "landing paid tier, player, terms, README",
+    "test": "npm test -- --grep @claim:paid-profiles",
+    "sandbox": "fresh browser context with a cached valid fixture verdict; save a named setup and assert the one-of-five count"
+  },
+  {
+    "id": "local-audio",
+    "claim": "Adds local audio for caption timing without uploading it",
+    "where": "landing how-it-works, player, README",
+    "test": "npm test -- --grep @claim:local-audio",
+    "sandbox": "fresh browser context at /demo; add a fixture audio file, assert the status, and intercept outside requests"
+  },
+  {
+    "id": "microphone-captions",
+    "claim": "Shows optional microphone captions when the device speech service is available",
+    "where": "player, privacy, README",
+    "test": "npm test -- --grep @claim:microphone-captions",
+    "sandbox": "fresh browser context with a fixture SpeechRecognition engine; assert the transcript and its supplied confidence render"
+  },
+  {
+    "id": "local-preferences",
+    "claim": "Keeps display settings and chosen terms in browser storage",
+    "where": "privacy page, README",
+    "test": "npm test -- --grep @claim:local-preferences",
+    "sandbox": "fresh browser context; change the real-mode caption size, reload, and assert the saved value"
+  }
+]

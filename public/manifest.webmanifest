@@ -1,0 +1,10 @@
+{
+  "name": "Caption Salience",
+  "short_name": "Salience",
+  "description": "Make uncertain caption words easier to notice.",
+  "start_url": "/player",
+  "display": "standalone",
+  "background_color": "#171a18",
+  "theme_color": "#171a18",
+  "icons": [{ "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }]
+}
