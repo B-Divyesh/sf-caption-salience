@@ -1,6 +1,6 @@
 [package]
 name = "caption-salience"
-version = "0.1.0"
+version = "0.1.1"
 description = "A local caption presentation control surface"
 authors = ["Param Factory"]
 license = "MIT"

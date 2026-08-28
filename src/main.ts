@@ -59,7 +59,7 @@ function footer(): string {
   return `<footer>
     <p>Caption emphasis for people who hear some words and miss others.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-route>Privacy</a><a href="/terms" data-route>Terms</a><a href="https://hello-factory.sociobot.in" rel="external">Built by Param Factory <span class="sr-only">(external site)</span></a></nav>
-    <p class="build">v0.1.0 · Original generated artwork</p>
+    <p class="build">v0.1.1 · Original generated artwork</p>
   </footer>`;
 }
 

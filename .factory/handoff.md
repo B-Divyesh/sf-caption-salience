@@ -1,4 +1,4 @@
-# Caption Salience v0.1.0 handoff
+# Caption Salience v0.1.1 handoff
 
 ## What was built
 
@@ -54,5 +54,5 @@ The first screen was read aloud and fits in one breath: the heading states the j
 
 - Register `caption-salience` and its ₹499 price with the Sociobot billing service. The app contains no product ID or payment-provider code.
 - Configure `APPLE_CERTIFICATE`, the related Apple signing secrets, and `WINDOWS_CERT_PFX` with its password when signed releases are wanted. The current workflow intentionally produces unsigned builds without them.
-- Push tag `v0.1.0` if it is not already present remotely, then verify the GitHub release assets and their `SHA256SUMS` file.
+- Verify the published `v0.1.1` GitHub release assets and their `SHA256SUMS` file after the tag workflow finishes.
 - Deploy `dist/site` through the factory. No DNS or infrastructure changes were made here.

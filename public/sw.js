@@ -1,4 +1,4 @@
-const CACHE = 'caption-salience-v2';
+const CACHE = 'caption-salience-v3';
 const SHELL = ['/', '/demo', '/player', '/privacy', '/terms', '/favicon.svg', '/apple-touch-icon.png', '/assets/app.js', '/assets/app.css', '/assets/caption-console-720.webp'];
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim())));
