@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 test('@claim:caption-import opens a local WebVTT file and renders its cues', async ({ page }) => {
@@ -120,4 +121,38 @@ test('mobile demo keeps controls visible at 390 pixels', async ({ page }, testIn
   await expect(page.getByLabel('Caption size')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('release build hashes entry assets, defines immutable caching, and preserves a real 404 response policy', async () => {
+  const site = path.join(process.cwd(), 'dist/site');
+  const assets = await readdir(path.join(site, 'assets'));
+  const appAssets = assets.filter((name) => /^app-[a-zA-Z0-9_-]+\.(?:js|css)$/.test(name));
+  expect(appAssets.some((name) => name.endsWith('.js'))).toBe(true);
+  expect(appAssets.some((name) => name.endsWith('.css'))).toBe(true);
+  expect(assets).not.toContain('app.js');
+  expect(assets).not.toContain('app.css');
+
+  const index = await readFile(path.join(site, 'index.html'), 'utf8');
+  for (const asset of appAssets) expect(index).toContain(`/assets/${asset}`);
+  for (const page of ['demo', 'player', 'privacy', 'terms', 'install']) {
+    await expect(readFile(path.join(site, page, 'index.html'), 'utf8')).resolves.toContain('/assets/app-');
+  }
+
+  const config = JSON.parse(await readFile(path.join(site, 'staticwebapp.config.json'), 'utf8'));
+  expect(config.navigationFallback).toBeUndefined();
+  expect(config.responseOverrides?.['404']).toEqual({ rewrite: '/404.html' });
+  for (const asset of appAssets) {
+    expect(config.routes).toContainEqual({
+      route: `/assets/${asset}`,
+      headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }
+    });
+  }
+  expect(config.routes).toContainEqual({
+    route: '/sw.js',
+    headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+  });
+
+  const serviceWorker = await readFile(path.join(site, 'sw.js'), 'utf8');
+  for (const asset of appAssets) expect(serviceWorker).toContain(`/assets/${asset}`);
+  await expect(readFile(path.join(site, '404.html'), 'utf8')).resolves.toContain('/assets/app-');
 });

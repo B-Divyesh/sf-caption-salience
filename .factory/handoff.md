@@ -1,28 +1,19 @@
-# Caption Salience v0.1.1 handoff — FAIL independent verification
+# Caption Salience repair handoff — 2026-08-28
 
-## Independent verification status (2026-08-28)
+## Release status
 
-**FAIL — do not release this candidate.** Independent QA against `efe4cc3a2e1fe9da741549e78899f59e14cf7b7e` and `https://caption-salience.sociobot.in` found that the live **Buy a license — ₹499** link returns HTTP 404 from the required Sociobot checkout endpoint. The paid checkout is not registered/enabled, so the product's advertised one-time license cannot be purchased. See `.factory/verification.md` for exact request/response evidence, all passing claim tests, and the two P2 deployment findings (non-immutable static caching and HTTP-200 unknown routes).
+The three findings in independent verification `6febf4c84e23384ad36a62aecd6b4f2f5fc9c7e1` are repaired and deployed to <https://caption-salience.sociobot.in>.
 
-The candidate's built JS/CSS hashes match the live deployment exactly. No product code was changed during independent verification.
+- **Paid checkout (P1):** registered the enabled production factory product `caption-salience` with the Dodo product `Caption Salience Supporter License`, **INR 49,900 minor units (₹499)**, and return URL `https://caption-salience.sociobot.in/`. `npm run verify:billing` now confirms the public product listing and a live `303` redirect to a Dodo checkout session. A matching pilot/test product is also enabled and its checkout redirects to the Dodo test host.
+- **Immutable release assets (P2):** the Vite entry outputs are now content-hashed (`/assets/app-CErYGqGY.css`, `/assets/app-DkAMavmu.js` for this build). The build writes exact immutable header rules for those emitted names and a versioned service-worker shell; it leaves HTML and `sw.js` revalidatable for safe updates.
+- **Real unknown-route status (P2):** known application routes are emitted as static documents. The Static Web Apps configuration rewrites its designed `404.html` without a navigation fallback, preserving HTTP 404.
 
-## What was built
+## What changed
 
-- A Vite and TypeScript caption player with a Tauri 2 desktop shell.
-- Local SRT and WebVTT import, including speaker parsing and explicit low-confidence annotations.
-- Optional local audio, a timer, cue navigation, and Space, arrow, J, and K shortcuts.
-- Three screen-reader-safe emphasis presets, a 28–72 px caption size, speaker labels, and chosen terms.
-- Optional microphone captions through the browser or operating-system speech service. Confidence is used only when that service supplies it.
-- A one-click `/demo` with five realistic cues, a persistent demo banner, reset, and a memory-only sandbox.
-- Local preference storage outside demo mode. Demo mode never reads or writes that namespace.
-- A ₹499 one-time Sociobot license flow. Every accessibility control stays free; a valid license adds five named setup profiles.
-- `/privacy`, `/terms`, `/install`, a designed 404 state, metadata, social art, PWA shell, offline cache, security headers, sitemap, and robots file.
-- A tag-driven Tauri release workflow for macOS arm64/x64, Windows, and Linux. It publishes checksums and `latest.json`.
-- Verified one-line Linux and Windows installers that stop on checksum mismatch.
-
-## Visual system and assets
-
-The product uses the mid-century acoustic instrument-panel system in `.factory/design.md`. The original console illustration was generated with the required factory image command, reviewed, and optimized to 18 KB and 47 KB responsive WebP files. The 1200×630 social card is 42 KB. Prompts and provenance are in `assets/src/` and `.factory/design.md`.
+- Added `scripts/prepare-static-site.mjs`, which emits static pages for `/demo`, `/player`, `/privacy`, `/terms`, and `/install`, creates `404.html`, resolves the exact hash names into Static Web Apps cache rules, and generates the service-worker cache list.
+- Added `scripts/verify-billing.mjs` and `npm run verify:billing` as a live, non-purchasing billing regression check.
+- Added browser regression coverage for hashed entry assets, their immutable-cache policy, static deep routes, the service-worker manifest, and the 404 response override.
+- Kept the researched brief, local-first caption behavior, demo sandbox, accessibility controls, and desktop-app release workflow unchanged.
 
 ## Verification
 
@@ -33,32 +24,34 @@ npm ci
 npm test
 npx tsc --noEmit
 npm run build
+npm run verify:billing
+npm run tauri -- build
 ```
 
-Results on 2026-08-28:
+Results from the clean repair run:
 
-- Unit and browser suite: 25 passed, 1 intentional project skip, 0 failed. The skip prevents the mobile-only assertion from running in the desktop project.
-- Every entry in `.factory/claims.json` passes through its listed `npm test -- --grep` command shape.
-- Playwright axe scan: no serious or critical violations on `/`, `/demo`, `/privacy`, `/terms`, or `/install` in desktop and 390 px mobile projects.
-- `/opt/fleet/lib/verify-url.sh`: 200 response, no console errors, one `h1`, `lang=en`, main landmark, no missing alt text, and no unlabeled buttons. Evidence is in `.factory/evidence/`.
-- Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100. LCP 1.66 s, total blocking time 29 ms, CLS 0.
-- Production bundle: 9.60 KB JS gzip and 4.70 KB CSS gzip. The mobile hero is 18 KB.
-- `npm run build` writes `dist/site/index.html`.
-- `npx tsc --noEmit` passes.
-- GitHub release `v0.1.1` completed successfully with macOS arm64/x64 DMGs, Windows MSI/EXE, Linux AppImage/DEB/RPM, `latest.json`, and `SHA256SUMS`.
-- A fresh download of `Caption.Salience_0.1.1_x64_en-US.msi` passed verification against the published `SHA256SUMS`.
+- `npm ci`: completed with 0 vulnerabilities.
+- `npm test`: **4 unit tests and 27 browser tests passed** in Chromium desktop and the 390 px mobile project; 1 intentional desktop-project skip. This includes all ten claim-tagged tests and the new deployment-policy regression.
+- `npx tsc --noEmit`: passed. The package has no lint script.
+- `npm run build`: passed; `dist/site` contains hash-named entry CSS/JS. Gzip sizes are **9.61 KB JS** and **4.70 KB CSS**.
+- `npm run verify:billing`: passed; it checks the public product registry values and confirms a **303** Dodo checkout redirect without charging a customer.
+- `npm run tauri -- build`: passed after installing the Linux WebKit/GLib build dependencies in the worker. It produced the Linux desktop bundle under `src-tauri/target/release/bundle/`.
+- Live `/opt/fleet/lib/verify-url.sh https://caption-salience.sociobot.in <evidence-dir>`: HTTP 200, title present, `lang=en`, one `h1`, a main landmark, no missing image alt text, no unlabeled buttons, and no console/page errors (578 ms smoke load).
+- Live Playwright smoke: desktop and 390 px mobile demo accepted Space and Right Arrow (`00:05 / 00:22`), had no console errors, and the 390 px configured mobile context had no horizontal overflow.
+- Live headers: both hash-named entry assets return `Cache-Control: public, max-age=31536000, immutable`; `/sw.js` returns `no-cache, no-store, must-revalidate`; an unknown route returns HTTP **404** and renders “This panel has no caption.”
+- Axe serious/critical checks continue to run inside the Playwright suite on `/`, `/demo`, `/privacy`, `/terms`, and `/install` in desktop and mobile. The standalone axe CLI could not launch Chrome in this container, but this does not affect the Playwright axe result.
 
-The first screen was read aloud and fits in one breath: the heading states the job, the sentence names the user, and the action names its result. The full sentence audit is in `.factory/copy-audit.md`.
+## Deployment
 
-## Known limits
+Deployed `dist/site` with `/opt/fleet/lib/deploy-static.sh caption-salience dist/site`.
 
-- Caption Salience does not transcribe imported audio. Microphone captions appear only when the host WebView exposes a speech-recognition service.
-- SRT has no standard confidence field. The supported explicit notation is `[?word?]`. WebVTT accepts `<c.low>` and `<c.conf-42>` annotations.
-- The local Rust check could not complete in the worker because GLib/WebKit development packages are absent. The failure occurred before project code compiled. The Linux GitHub runner installs those packages before building.
-- Desktop builds are unsigned until operator certificates are configured.
+- Static Web App: `sf-caption-salience` (Central US)
+- Deployment ID: `d1411089-bcfd-44c8-b5ac-b3410b3ba956`
+- Custom domain: <https://caption-salience.sociobot.in>
 
-## Needs operator action
+## Known limits and operator notes
 
-- Register `caption-salience` and its ₹499 price with the Sociobot billing service. The app contains no product ID or payment-provider code.
-- Configure `APPLE_CERTIFICATE`, the related Apple signing secrets, and `WINDOWS_CERT_PFX` with its password when signed releases are wanted. The current workflow intentionally produces unsigned builds without them.
-- Deploy `dist/site` through the factory. No DNS or infrastructure changes were made here.
+- Caption Salience does not transcribe imported audio. Microphone captions depend on the host browser or operating-system speech service.
+- SRT has no standard confidence field. The supported explicit notation is `[?word?]`; WebVTT accepts `<c.low>` and `<c.conf-42>`.
+- Desktop artifacts are unsigned. Signed macOS and Windows releases need `APPLE_CERTIFICATE`, the related Apple signing secrets, and `WINDOWS_CERT_PFX` with its password in GitHub Actions.
+- A Dodo test payment from a US billing address was intentionally not used as production evidence: Dodo converted the INR price to USD and the shared factory validator rejected the mismatched currency before issuing a test license. The supported INR checkout and production checkout registration are healthy; cross-currency validation is a shared billing-service concern outside this static product repository.

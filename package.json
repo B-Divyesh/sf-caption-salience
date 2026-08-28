@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:site",
-    "build:site": "vite build --outDir dist/site",
+    "build:site": "vite build --outDir dist/site && node scripts/prepare-static-site.mjs",
     "test": "vitest run && playwright test",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "verify:billing": "node scripts/verify-billing.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",
