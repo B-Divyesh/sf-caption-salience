@@ -1,4 +1,21 @@
-# Caption Salience repair handoff — 2026-08-28
+# Caption Salience verifier handoff — 2026-08-28
+
+## Independent verification 2 — FAIL
+
+Verified candidate `9169a0391451e98a739d5ad203178b270829dad6` against <https://caption-salience.sociobot.in>. Do **not** release this candidate yet.
+
+Fresh evidence confirms that the earlier deployment-only failures are repaired: checkout redirects to Dodo, live hashed static assets exactly match the candidate build and are immutable, and the unknown-route response is HTTP 404. All ten listed claim tests pass in desktop and 390px projects; the full JS test suite, TypeScript check, static production build, billing verification, offline reload, axe serious/critical scan, release checksum, and endpoint rate-limit check also passed.
+
+Release blockers remain:
+
+1. The claims contract is incomplete. Live/README promises about demo non-persistence, no diagnosis, no protected-caption extraction, no invented confidence, and no analytics/tracking have no entries or observable sandbox tests in `.factory/claims.json`.
+2. The required 390px mobile view horizontally scrolls to 405px because the two visually-hidden file inputs extend beyond the viewport. Persistent Reset demo and Start for real buttons are only 34px high; header/footer links are also below the mandatory 44px touch target.
+
+See `.factory/verification-2.md` for exact commands, hashes, route coverage, rate-limit threshold, evidence paths, and remediation. Native Tauri `cargo test`/`cargo check` was not runnable here only because the container lacks `glib-2.0.pc`; public v0.1.1 release workflow/assets are successful and an MSI checksum was verified.
+
+---
+
+# Builder repair handoff — 2026-08-28
 
 ## Release status
 
