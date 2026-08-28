@@ -1,48 +1,39 @@
-# Independent verification 3 handoff — FAIL
+# Caption Salience repair handoff — 2026-08-28
 
 ## Result
 
-**FAIL** for candidate `13ca7bf7179f7b03315659951cc697b45fdb4011` at <https://caption-salience.sociobot.in>, independently verified on 2026-08-28. Product code was not modified. Full evidence and reproduction details are in `.factory/verification-3.md`.
+The three findings from independent verification 3 for candidate `13ca7bf7179f7b03315659951cc697b45fdb4011` are repaired in release commit `5fbad962129606e4d194dba0a6d0008ea10e7f7d` (desktop app version `0.1.2`). This remains a Tauri 2 desktop app with its static companion site and GitHub Actions release workflow.
 
-## Release blockers
+## Repairs
 
-- **P1 — stale desktop release:** `/install` downloads `v0.1.1`, built by its successful release run from `c103c109…`, not the candidate. The published binary embeds old `/assets/app.js` and `/assets/app.css` paths and predates the candidate's UI/mobile repairs.
-- **P1 — invisible primary keyboard focus:** on `/player`, the first two Tab stops are clipped 1×1px file inputs. Their visible Open/Add labels show no outline, so keyboard users cannot see which import action is active.
-- **P2 — off-screen route focus:** navigating from a scrolled footer to Privacy leaves the newly focused `<h1>` completely above the viewport.
+1. **Visible import focus:** each file input now lives inside its visible label. `.file-label:focus-within` draws the product's 3px brass signal outline around the real Open SRT/WebVTT or Add local audio control when Tab focuses its clipped input. The direct Playwright regression tabs from the player heading, asserts the actual input focus, and asserts the 3px visible label outline for both imports at desktop and 390px.
+2. **Route focus and scroll:** client navigation stores the departing entry's scroll position, creates a new history entry at zero, then focuses the destination heading without allowing focus to move the viewport. Back/forward restore only the saved history entry position. The regression starts at the scrolled footer, follows Privacy, verifies its focused heading is fully visible at `scrollY=0`, then verifies Back restores the old position.
+3. **Fresh desktop-release provenance:** all product version sources are `0.1.2`. The static build writes `release-identity.json` with the package version and source commit. Tauri embeds the hashed static assets, including this identity, in each native package; this makes a released package verifiable against its source rather than merely against a release tag. The production-build regression validates the emitted identity and asset/cache contract.
 
-## What passed
-
-- Mandatory cold first-read and one-click sample demo.
-- All 15 claim commands after `npm ci`, in desktop and 390px mobile projects.
-- `npm ci` (0 vulnerabilities), `npx tsc --noEmit`, `npm test` (4 unit + 38 browser passed; 2 expected mobile-only skips), `npm run build`, billing verification, shell syntax, `cargo check`, and `cargo test` (0 Rust tests defined).
-- Live static files byte-match the candidate build.
-- Normal/invalid caption import and recovery, 28/72px boundaries, playback keys, local audio, demo reset/exit, preference persistence, and microphone fixture.
-- Live Axe: 0 serious/critical issues on all main routes and 404 at desktop and 390px. Mobile has no overflow and required persistent targets are at least 44px. Reduced motion works.
-- Mobile Lighthouse: 96 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1.3s and CLS 0.
-- Same-origin caption/demo traffic, expected GitHub-only install request, security headers, immutable hashed assets, real 404, active versioned service worker, and offline demo reload.
-- Billing checkout redirects to Dodo. API burst observed 30×200 then 50×429 with `Retry-After: 4`.
-- The public release has all three platform families and valid manifests/checksums. The live Linux installer verified and installed its AppImage in a temporary directory; the extracted DEB smoke-launched under Xvfb. Those artifacts are installable but stale.
-
-## Verification commands
+## Verification performed
 
 ```sh
-npm ci
-node -e "for (const c of require('./.factory/claims.json')) console.log(c.test)"
-# Run every printed claim command independently.
-npx tsc --noEmit
-npm test
-npm run build
-npm run verify:billing
-sh -n public/install.sh
-cargo check --manifest-path src-tauri/Cargo.toml
-cargo test --manifest-path src-tauri/Cargo.toml
+npm ci                         # 63 packages; 0 vulnerabilities
+npx tsc --noEmit               # passed
+npm test                        # 4 Vitest + 42 Playwright passed; 2 desktop-only mobile skips
+npm run build                   # passed; dist/site created
+npm run verify:billing          # ₹499 registration and Dodo redirect passed
+sh -n public/install.sh         # passed
+cargo check --manifest-path src-tauri/Cargo.toml  # passed
+cargo test --manifest-path src-tauri/Cargo.toml   # passed; 0 Rust tests defined
+CI=true npx tauri build --bundles deb              # passed
 ```
 
-Tauri checks on Linux require the packages declared in `.github/workflows/release.yml`. There is no lint script. PowerShell was unavailable, so `install.ps1` was inspected but not executed.
+- The full browser suite runs all 15 claim-tagged flows in both Chromium desktop and the 390×844 mobile project. It includes same-origin/local-file checks, offline demo reload, keyboard playback, demo isolation, mobile no-overflow and 44px persistent target checks, and Axe serious/critical checks.
+- The built site emits `app-CuTsQjMP.js` (27,286 bytes raw, 9.72 KB gzip) and `app-tXa-ZJPb.css` (18,111 bytes raw, 4.73 KB gzip). `dist/site/release-identity.json` names version `0.1.2` and commit `5fbad962129606e4d194dba0a6d0008ea10e7f7d`.
+- A local release-mode Debian package was built at `src-tauri/target/release/bundle/deb/Caption Salience_0.1.2_amd64.deb`; SHA-256 `95ee50de826e433a235525f8010a64533c4f998f6b3dd67d6f10f8687fd6417f`. Its extracted app binary contains the new hashed `app-CuTsQjMP.js` resource and `/release-identity.json`; it stayed running for an 8-second Xvfb smoke launch.
+- Local AppImage assembly reaches the Tauri `linuxdeploy` phase but fails in this container (`failed to run linuxdeploy`), including with `APPIMAGE_EXTRACT_AND_RUN=1`. The committed GitHub Actions Ubuntu release job builds the same target on the supported runner; it must publish and be inspected before treating the release as complete.
 
-## Next steps
+## Deployment and release status
 
-1. Repair visible focus for both file controls and route scroll/focus behavior; add direct regressions.
-2. Tag the repaired accepted commit and let the GitHub workflow publish fresh macOS, Windows, and Linux packages.
-3. Extract one fresh package and confirm it embeds the candidate hashed assets/build identity.
-4. Repeat the complete independent verification before release.
+The source commit is ready to push and tag as `v0.1.2`. The release workflow will build unsigned macOS arm64/x64, Windows MSI/EXE, and Linux AppImage/DEB/RPM, then attach `SHA256SUMS` and `latest.json`. After the workflow completes, deploy `dist/site` with the factory static deployment configuration and verify that `/install` resolves `v0.1.2`; extract one release artifact and confirm it contains `app-CuTsQjMP.js` and `release-identity.json` with the release commit.
+
+## Operator notes
+
+- Desktop builds remain unsigned. macOS signing/notarization needs `APPLE_CERTIFICATE` and the related Apple secrets; Windows signing needs `WINDOWS_CERT_PFX` and its password.
+- PowerShell is unavailable in this Linux worker, so `public/install.ps1` was not executed here. Its shell counterpart passed syntax validation.
