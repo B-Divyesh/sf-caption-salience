@@ -2,7 +2,7 @@
 
 ## Result
 
-The three findings from independent verification 3 for candidate `13ca7bf7179f7b03315659951cc697b45fdb4011` are repaired in release commit `5fbad962129606e4d194dba0a6d0008ea10e7f7d` (desktop app version `0.1.2`). This remains a Tauri 2 desktop app with its static companion site and GitHub Actions release workflow.
+The three findings from independent verification 3 for candidate `13ca7bf7179f7b03315659951cc697b45fdb4011` are repaired in product commit `5fbad962129606e4d194dba0a6d0008ea10e7f7d` and released from `968407597c6ee0cb1ed5bc247b88769988e946ec` as desktop app version `0.1.2`. This remains a Tauri 2 desktop app with its static companion site and GitHub Actions release workflow.
 
 ## Repairs
 
@@ -25,13 +25,19 @@ CI=true npx tauri build --bundles deb              # passed
 ```
 
 - The full browser suite runs all 15 claim-tagged flows in both Chromium desktop and the 390×844 mobile project. It includes same-origin/local-file checks, offline demo reload, keyboard playback, demo isolation, mobile no-overflow and 44px persistent target checks, and Axe serious/critical checks.
-- The built site emits `app-CuTsQjMP.js` (27,286 bytes raw, 9.72 KB gzip) and `app-tXa-ZJPb.css` (18,111 bytes raw, 4.73 KB gzip). `dist/site/release-identity.json` names version `0.1.2` and commit `5fbad962129606e4d194dba0a6d0008ea10e7f7d`.
-- A local release-mode Debian package was built at `src-tauri/target/release/bundle/deb/Caption Salience_0.1.2_amd64.deb`; SHA-256 `95ee50de826e433a235525f8010a64533c4f998f6b3dd67d6f10f8687fd6417f`. Its extracted app binary contains the new hashed `app-CuTsQjMP.js` resource and `/release-identity.json`; it stayed running for an 8-second Xvfb smoke launch.
+- The built site emits `app-CuTsQjMP.js` (27,286 bytes raw, 9.72 KB gzip) and `app-tXa-ZJPb.css` (18,111 bytes raw, 4.73 KB gzip). `dist/site/release-identity.json` names version `0.1.2` and release commit `968407597c6ee0cb1ed5bc247b88769988e946ec`.
+- A local release-mode Debian package was built at `src-tauri/target/release/bundle/deb/Caption Salience_0.1.2_amd64.deb`; SHA-256 `69b7e287bd7a0cc7361642689ea769609f005c70588c7442a9658c4c85292678`. Its extracted app binary contains the new hashed `app-CuTsQjMP.js` resource and `/release-identity.json`; it stayed running for an 8-second Xvfb smoke launch.
 - Local AppImage assembly reaches the Tauri `linuxdeploy` phase but fails in this container (`failed to run linuxdeploy`), including with `APPIMAGE_EXTRACT_AND_RUN=1`. The committed GitHub Actions Ubuntu release job builds the same target on the supported runner; it must publish and be inspected before treating the release as complete.
 
 ## Deployment and release status
 
-The source commit is ready to push and tag as `v0.1.2`. The release workflow will build unsigned macOS arm64/x64, Windows MSI/EXE, and Linux AppImage/DEB/RPM, then attach `SHA256SUMS` and `latest.json`. After the workflow completes, deploy `dist/site` with the factory static deployment configuration and verify that `/install` resolves `v0.1.2`; extract one release artifact and confirm it contains `app-CuTsQjMP.js` and `release-identity.json` with the release commit.
+Deployed `dist/site` with `/opt/fleet/lib/deploy-static.sh caption-salience dist/site`.
+
+- Static Web App deployment ID: `98179642-6af4-4278-956a-5df23a9767c1`; live URL: <https://caption-salience.sociobot.in>.
+- Live `release-identity.json` is version `0.1.2`, commit `968407597c6ee0cb1ed5bc247b88769988e946ec`. `verify-url.sh` passed at 909 ms with no console/page errors, one title/language/main/H1, and no missing image alt text or unlabeled button. The deployed hashed JS has immutable one-year caching and the expected CSP.
+- Live keyboard exercise: both first file actions received Tab focus on their actual inputs and computed `rgb(255, 180, 75) solid 3px` visible label outlines. A scrolled-footer Privacy navigation reset to `scrollY=0`, focused the heading, and placed it from 215px to 402px in a 900px viewport.
+- GitHub Actions release run [33197104423](https://github.com/B-Divyesh/sf-caption-salience/actions/runs/33197104423) passed all macOS (arm64/x64), Windows, Ubuntu, and manifest jobs. Public release `v0.1.2` targets commit `9684075` and includes DMG, MSI/EXE, AppImage/DEB/RPM, `SHA256SUMS`, and `latest.json`.
+- Downloaded public `Caption.Salience_0.1.2_amd64.deb` and verified it against the public `SHA256SUMS`; its extracted binary contains `app-CuTsQjMP.js` and `/release-identity.json`. Live `/install` resolves `v0.1.2` for Linux and links its new AppImage without console errors.
 
 ## Operator notes
 
