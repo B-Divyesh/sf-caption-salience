@@ -1,0 +1,15 @@
+{
+  "slug": "caption-salience",
+  "title": "Caption Salience",
+  "summary": "Make uncertain caption words easier to notice.",
+  "artifact_class": "desktop-app",
+  "user": "People with partial or high-frequency hearing loss who use captions while retaining some audio.",
+  "job": "Play user-provided SRT and WebVTT captions with visible emphasis for supplied uncertainty, speaker changes, and chosen terms.",
+  "non_goals": [
+    "Extract captions from DRM services",
+    "Diagnose hearing loss",
+    "Provide cloud transcription by default",
+    "Invent confidence scores when a caption file has none"
+  ],
+  "monetization": "one-time"
+}
