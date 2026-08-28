@@ -39,6 +39,8 @@ Results on 2026-08-28:
 - Production bundle: 9.60 KB JS gzip and 4.70 KB CSS gzip. The mobile hero is 18 KB.
 - `npm run build` writes `dist/site/index.html`.
 - `npx tsc --noEmit` passes.
+- GitHub release `v0.1.1` completed successfully with macOS arm64/x64 DMGs, Windows MSI/EXE, Linux AppImage/DEB/RPM, `latest.json`, and `SHA256SUMS`.
+- A fresh download of `Caption.Salience_0.1.1_x64_en-US.msi` passed verification against the published `SHA256SUMS`.
 
 The first screen was read aloud and fits in one breath: the heading states the job, the sentence names the user, and the action names its result. The full sentence audit is in `.factory/copy-audit.md`.
 
@@ -48,11 +50,9 @@ The first screen was read aloud and fits in one breath: the heading states the j
 - SRT has no standard confidence field. The supported explicit notation is `[?word?]`. WebVTT accepts `<c.low>` and `<c.conf-42>` annotations.
 - The local Rust check could not complete in the worker because GLib/WebKit development packages are absent. The failure occurred before project code compiled. The Linux GitHub runner installs those packages before building.
 - Desktop builds are unsigned until operator certificates are configured.
-- A public release must finish before the Install page can resolve a platform asset. Until then it shows the calm release-page fallback.
 
 ## Needs operator action
 
 - Register `caption-salience` and its ₹499 price with the Sociobot billing service. The app contains no product ID or payment-provider code.
 - Configure `APPLE_CERTIFICATE`, the related Apple signing secrets, and `WINDOWS_CERT_PFX` with its password when signed releases are wanted. The current workflow intentionally produces unsigned builds without them.
-- Verify the published `v0.1.1` GitHub release assets and their `SHA256SUMS` file after the tag workflow finishes.
 - Deploy `dist/site` through the factory. No DNS or infrastructure changes were made here.
