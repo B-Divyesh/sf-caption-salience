@@ -1,0 +1,7 @@
+1
+00:00:00,000 --> 00:00:02,500
+MAYA: Take the [?northbound?] train.
+
+2
+00:00:02,500 --> 00:00:05,000
+ROWAN: Meet me at platform fourteen.

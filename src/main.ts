@@ -7,6 +7,8 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 const realStorageKey = 'caption-salience:preferences';
 const licenseKey = 'sb_license:caption-salience';
 const profilesKey = 'caption-salience:profiles';
+const initialUrl = new URL(location.href);
+const isDemoUrl = (url: URL): boolean => url.pathname === '/demo' || url.searchParams.get('demo') === '1';
 const defaultPreferences: Preferences = {
   fontSize: 44,
   preset: 'balanced',
@@ -16,7 +18,7 @@ const defaultPreferences: Preferences = {
 };
 
 let cues: CaptionCue[] = [];
-let demoMode = false;
+let demoMode = isDemoUrl(initialUrl);
 let currentTime = 0;
 let playing = false;
 let timerStart = 0;
@@ -24,7 +26,9 @@ let timeAtPlay = 0;
 let animation = 0;
 let audioUrl = '';
 let recognition: { stop: () => void } | null = null;
-let preferences: Preferences = loadPreferences();
+let preferences: Preferences = demoMode
+  ? { ...defaultPreferences, terms: [...defaultPreferences.terms] }
+  : loadPreferences();
 
 function loadPreferences(): Preferences {
   try {
@@ -47,7 +51,7 @@ function header(): string {
     <header class="site-header">
       <a class="wordmark" href="/" data-route aria-label="Caption Salience home"><span class="wordmark-dial" aria-hidden="true"></span>Caption Salience</a>
       <nav aria-label="Main navigation">
-        <a href="/demo" data-route>Demo</a>
+        <a href="/?demo=1" data-route>Demo</a>
         <a href="/player" data-route>Player</a>
         <a href="/install" data-route>Install</a>
         <a href="/privacy" data-route>Privacy</a>
@@ -58,15 +62,15 @@ function header(): string {
 function footer(): string {
   return `<footer>
     <p>Caption emphasis for people who hear some words and miss others.</p>
-    <nav aria-label="Footer navigation"><a href="/privacy" data-route>Privacy</a><a href="/terms" data-route>Terms</a><a href="https://hello-factory.sociobot.in" rel="external">Built by Param Factory <span class="sr-only">(external site)</span></a></nav>
-    <p class="build">v0.1.2 · Original generated artwork</p>
+    <nav aria-label="Footer navigation"><a href="/privacy" data-route>Privacy</a><a href="/terms" data-route>Terms</a><a href="https://hello-factory.sociobot.in" rel="external">Built by Param Factory <span class="external-note">(external)</span></a></nav>
+    <p class="build">v0.1.3 · Original generated artwork and app screenshots</p>
   </footer>`;
 }
 
 function demoBanner(): string {
   return demoMode ? `<aside class="demo-banner" aria-label="Demo status">
     <span><strong>Demo</strong> — sample data, nothing is saved</span>
-    <span class="demo-actions"><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="start-real">Start for real</button></span>
+    <span class="demo-actions"><button class="text-button" id="reset-demo">Reset demo</button><button class="text-button" id="start-real">Leave demo and open captions</button></span>
   </aside>` : '';
 }
 
@@ -74,28 +78,33 @@ function homePage(): string {
   return `${header()}<main id="main">
     <section class="hero" aria-labelledby="home-title">
       <div class="hero-copy">
-        <p class="eyebrow">A local caption control surface</p>
-        <h1 id="home-title" tabindex="-1">Make hard-to-hear words stand out</h1>
+        <p class="eyebrow">A local caption player</p>
+        <h1 id="home-title" tabindex="-1">Make uncertain caption words stand out</h1>
         <p class="lede">For people who hear some speech and need uncertain words to catch their eye.</p>
-        <div class="hero-action"><a class="primary" href="/demo" data-route>Try it with sample data</a><span>It opens a timed five-caption conversation.</span></div>
-        <ul class="plain-facts" aria-label="Product facts"><li>Caption files stay on this device.</li><li>Works offline after the first visit.</li><li>Core caption controls are free.</li></ul>
+        <div class="hero-action"><a class="primary" href="/?demo=1" data-route>Try it with sample data</a><span>See five timed captions with the three marks already applied.</span></div>
+        <ul class="plain-facts" aria-label="Product facts"><li>Caption and audio files stay on this device.</li><li>Works offline after the first visit.</li><li>Size and caption marks stay free.</li></ul>
       </div>
       <figure class="hero-art instrument-frame">
         <picture><source srcset="/assets/caption-console-720.webp 720w, /assets/caption-console-1200.webp 1200w" type="image/webp"><img src="/assets/caption-console-1200.webp" width="1200" height="800" alt="An illustrated caption console with a glowing display and brass controls." fetchpriority="high" decoding="async"></picture>
-        <figcaption>Built like a listening instrument: calm, direct, and adjustable.</figcaption>
+        <figcaption>Adjust caption size, uncertainty marks, speakers, and chosen terms.</figcaption>
       </figure>
     </section>
     <section class="live-preview" aria-labelledby="preview-title">
-      <div><p class="eyebrow">Live preview</p><h2 id="preview-title">See what needs a second look</h2><p>Uncertainty appears only when the caption source supplies it. Chosen terms and speaker changes use separate marks.</p></div>
+      <div><p class="eyebrow">Live preview</p><h2 id="preview-title">Preview the three caption marks</h2><p>Uncertainty appears only when the caption source supplies it. Chosen terms and speaker changes use separate marks.</p></div>
       <div class="caption-well preset-balanced" aria-label="Caption preview"><span class="speaker-chip">Maya</span><p>The train leaves from <span class="uncertain">platform</span> <span class="chosen">fourteen</span>.</p><div class="legend"><span><i class="swatch uncertain-swatch"></i>Supplied uncertainty</span><span><i class="swatch term-swatch"></i>Chosen term</span></div></div>
     </section>
-    <section class="steps" aria-labelledby="steps-title"><p class="eyebrow">Three controls</p><h2 id="steps-title">How the player works</h2><ol>
+    <section class="app-tour" aria-labelledby="tour-title"><p class="eyebrow">Desktop walkthrough</p><h2 id="tour-title">See the caption player in use</h2><div class="tour-grid">
+      <figure><img src="/assets/walkthrough-open.webp" width="1200" height="750" loading="lazy" decoding="async" alt="Caption Salience showing an opened WebVTT file with a populated caption timeline."><figcaption>1. Open an SRT or WebVTT file. Its timed cues fill the caption timeline.</figcaption></figure>
+      <figure><img src="/assets/walkthrough-marks.webp" width="1200" height="750" loading="lazy" decoding="async" alt="Caption Salience showing separate uncertainty, speaker, and chosen-term marks."><figcaption>2. Choose caption size, uncertainty, speaker, and chosen-term marks.</figcaption></figure>
+      <figure><img src="/assets/walkthrough-play.webp" width="1200" height="750" loading="lazy" decoding="async" alt="Caption Salience playing a later cue while a local audio file controls the timer."><figcaption>3. Add local audio, then play or seek through the timed captions.</figcaption></figure>
+    </div></section>
+    <section class="steps" aria-labelledby="steps-title"><p class="eyebrow">Three steps</p><h2 id="steps-title">How the player works</h2><ol>
       <li><span>01</span><div><h3>Open captions</h3><p>Choose an SRT or WebVTT file. You can add local audio for timing.</p></div></li>
-      <li><span>02</span><div><h3>Set the signals</h3><p>Choose text size, an emphasis preset, speakers, and important terms.</p></div></li>
-      <li><span>03</span><div><h3>Play and follow</h3><p>Use the timer, timeline, or keyboard to move through each cue.</p></div></li>
+      <li><span>02</span><div><h3>Choose caption marks</h3><p>Choose text size, an emphasis preset, speakers, and chosen terms.</p></div></li>
+      <li><span>03</span><div><h3>Play the timed captions</h3><p>Use Play, the timeline, cue buttons, or keyboard shortcuts to change cues.</p></div></li>
     </ol></section>
     <section class="boundaries" aria-labelledby="boundaries-title"><div><p class="eyebrow">Clear limits</p><h2 id="boundaries-title">A player, not a hearing test</h2></div><ul><li>It does not diagnose hearing loss.</li><li>It does not extract video or protected captions.</li><li>It does not invent confidence scores.</li><li>Optional microphone captions depend on your device speech service.</li></ul></section>
-    <section class="paid" aria-labelledby="paid-title"><div><p class="eyebrow">One-time supporter license</p><h2 id="paid-title">Save several setup profiles</h2><p>Pay ₹499 once to save five named setups. Playback and every accessibility control stay free.</p></div><div class="paid-actions"><a class="primary" href="https://api.sociobot.in/api/v1/products/caption-salience/checkout">Buy a license — ₹499</a><button class="secondary" id="restore-license">Paste a license</button><p>Sociobot is the merchant of record. Refunds are handled there.</p></div></section>
+    <section class="paid" aria-labelledby="paid-title"><div><p class="eyebrow">One-time supporter license</p><h2 id="paid-title">Save up to five setup profiles</h2><p>Pay ₹499 once to save up to five named setup profiles. Size, uncertainty, speaker, and chosen-term controls stay free.</p></div><div class="paid-actions"><a class="primary" href="https://api.sociobot.in/api/v1/products/caption-salience/checkout" rel="external">Buy a license — ₹499 <span class="external-note">(external)</span></a><button class="secondary" id="restore-license">Activate a license</button><p>Sociobot is the merchant of record. <a href="mailto:support@sociobot.in">Request refunds from Sociobot</a>.</p></div></section>
   </main>${footer()}`;
 }
 
@@ -160,7 +169,7 @@ function activePlayer(): string {
       <audio id="local-audio" ${audioUrl ? `src="${escapeHtml(audioUrl)}"` : ''} preload="metadata"></audio>
       <p class="shortcuts">Space: play · ←/→: five seconds · J/K: previous/next caption</p>
     </section>
-    <aside class="control-bank instrument-panel" aria-labelledby="controls-title"><div class="panel-label"><h2 id="controls-title">Signal controls</h2><span>CALIBRATE</span></div>
+    <aside class="control-bank instrument-panel" aria-labelledby="controls-title"><div class="panel-label"><h2 id="controls-title">Caption controls</h2><span>SETTINGS</span></div>
       <fieldset><legend>Emphasis preset</legend>${(['balanced', 'strong', 'outline'] as SaliencePreset[]).map((preset) => `<label class="radio-control"><input type="radio" name="preset" value="${preset}" ${preferences.preset === preset ? 'checked' : ''}><span>${preset[0].toUpperCase() + preset.slice(1)}</span></label>`).join('')}</fieldset>
       <label for="font-size">Caption size <output id="size-output">${preferences.fontSize} px</output></label><input id="font-size" type="range" min="28" max="72" step="2" value="${preferences.fontSize}">
       <label class="switch"><input id="show-uncertain" type="checkbox" ${preferences.showUncertain ? 'checked' : ''}><span>Mark supplied uncertainty</span></label>
@@ -174,17 +183,19 @@ function activePlayer(): string {
 }
 
 function isLicensed(): boolean {
+  if (demoMode) return false;
   try { return JSON.parse(localStorage.getItem(`${licenseKey}:verdict`) || '{}').valid === true; } catch { return false; }
 }
 
 function profileControls(): string {
   if (demoMode) return '';
-  if (!isLicensed()) return `<div class="profile-box"><p><strong>Saved profiles</strong></p><p>A supporter license adds five named setup profiles.</p><a href="https://api.sociobot.in/api/v1/products/caption-salience/checkout">Buy a license</a></div>`;
+  if (!isLicensed()) return `<div class="profile-box"><p><strong>Saved profiles</strong></p><p>A supporter license adds up to five named setup profiles.</p><a href="https://api.sociobot.in/api/v1/products/caption-salience/checkout" rel="external">Buy a license <span class="external-note">(external)</span></a></div>`;
   const profiles = loadProfiles();
   return `<div class="profile-box"><p><strong>Saved profiles</strong> <span>${profiles.length}/5</span></p><div class="profile-actions"><button class="secondary" id="save-profile" ${profiles.length >= 5 ? 'disabled' : ''}>Save this setup</button>${profiles.map((profile, index) => `<button class="text-button profile-load" data-profile="${index}">Load ${escapeHtml(profile.name)}</button>`).join('')}</div></div>`;
 }
 
 function loadProfiles(): { name: string; preferences: Preferences }[] {
+  if (demoMode) return [];
   try { return JSON.parse(localStorage.getItem(profilesKey) || '[]'); } catch { return []; }
 }
 
@@ -192,31 +203,49 @@ function legalPage(kind: 'privacy' | 'terms'): string {
   const privacy = kind === 'privacy';
   const title = privacy ? 'Keep captions on your device' : 'Use Caption Salience fairly';
   return `${header()}<main id="main" class="prose-page"><p class="eyebrow">${privacy ? 'Privacy' : 'Terms'}</p><h1 tabindex="-1">${title}</h1>${privacy ? `
-    <h2>What stays local</h2><p>Caption and audio files are opened in memory. They are not uploaded by Caption Salience.</p><p>Your terms and display settings stay in this browser. You can clear them from browser storage.</p>
+    <h2>What stays local</h2><p>Caption and audio files are opened in memory. Caption Salience does not upload them.</p><p>Your chosen terms and display settings stay in this browser. You can clear them from browser storage.</p>
     <h2>When a network is used</h2><p>The Install page asks GitHub for current release details. License checks send only your license token to Sociobot.</p><p>Microphone captions use the speech service supplied by your browser or operating system. Check that service before using private speech.</p>
     <h2>What we collect</h2><p>This version has no analytics, advertising, accounts, or tracking cookies.</p>` : `
     <h2>Your files</h2><p>You keep ownership of files you open. Use only files you have permission to use.</p>
     <h2>What the tool provides</h2><p>The tool presents captions and supplied confidence. It is not medical advice and does not promise transcription accuracy.</p>
-    <h2>Licenses and refunds</h2><p>A ₹499 license is a one-time purchase for saved profiles. Sociobot is the merchant of record. A refund revokes the license.</p>
-    <h2>Warranty</h2><p>The software is provided under the MIT License without warranty. Core controls remain available without payment.</p>`}</main>${footer()}`;
+    <h2>Licenses and refunds</h2><p>A ₹499 license is a one-time purchase for up to five saved setup profiles. Sociobot is the merchant of record.</p><p><a href="mailto:support@sociobot.in">Request refunds from Sociobot</a>. A completed refund ends the saved-profile license.</p>
+    <h2>Warranty</h2><p>The software is provided under the MIT License without warranty. Size, uncertainty, speaker, and chosen-term controls remain free.</p>`}</main>${footer()}`;
 }
 
 function installPage(): string {
-  return `${header()}<main id="main" class="install-page"><p class="eyebrow">Desktop app</p><h1 tabindex="-1">Install Caption Salience on your computer</h1><p class="lede">Choose your system. Caption files stay local after installation.</p><section class="download-panel instrument-panel" aria-labelledby="download-title"><h2 id="download-title">Download the desktop app</h2><p id="platform-copy">Checking the latest release…</p><div id="download-actions"><a class="primary" href="https://github.com/B-Divyesh/sf-caption-salience/releases">View releases</a></div><p>Current builds are unsigned. Your system may ask you to confirm the first launch.</p></section><section class="walkthrough" aria-labelledby="walk-title"><h2 id="walk-title">From file to focused captions</h2><ol><li><span>1</span><p>Open your caption file.</p></li><li><span>2</span><p>Choose emphasis and terms.</p></li><li><span>3</span><p>Play captions beside your audio.</p></li></ol></section></main>${footer()}`;
+  return `${header()}<main id="main" class="install-page"><p class="eyebrow">Desktop app</p><h1 tabindex="-1">Install Caption Salience on your computer</h1><p class="lede">Choose the build for your system.</p><section class="download-panel instrument-panel" aria-labelledby="download-title"><h2 id="download-title">Download the desktop app</h2><p id="platform-copy">Checking the latest release…</p><div id="download-actions"><a class="primary" href="https://github.com/B-Divyesh/sf-caption-salience/releases" rel="external">View releases <span class="external-note">(external)</span></a></div><p>Current builds are unsigned. Your system may ask you to confirm the first launch.</p></section><section class="walkthrough" aria-labelledby="walk-title"><h2 id="walk-title">Open, adjust, and play captions</h2><ol><li><span>1</span><p>Open your caption file.</p></li><li><span>2</span><p>Choose emphasis and terms.</p></li><li><span>3</span><p>Play captions beside your audio.</p></li></ol></section></main>${footer()}`;
 }
 
 function notFoundPage(): string {
-  return `${header()}<main id="main" class="not-found"><div class="lost-dial" aria-hidden="true"><span></span></div><p class="eyebrow">Signal not found · 404</p><h1 tabindex="-1">This panel has no caption</h1><p>The address does not match a page in Caption Salience.</p><a class="primary" href="/" data-route>Return home</a></main>${footer()}`;
+  return `${header()}<main id="main" class="not-found"><div class="lost-dial" aria-hidden="true"><span></span></div><p class="eyebrow">Error 404</p><h1 tabindex="-1">Page not found</h1><p>The address does not match a page in Caption Salience.</p><a class="primary" href="/" data-route>Return home</a></main>${footer()}`;
 }
 
-const routes: Record<string, { title: string; render: () => string }> = {
-  '/': { title: 'Caption Salience — Make uncertain words stand out', render: homePage },
-  '/demo': { title: 'Demo — Caption Salience', render: playerPage },
-  '/player': { title: 'Player — Caption Salience', render: playerPage },
-  '/install': { title: 'Install — Caption Salience', render: installPage },
-  '/privacy': { title: 'Privacy — Caption Salience', render: () => legalPage('privacy') },
-  '/terms': { title: 'Terms — Caption Salience', render: () => legalPage('terms') }
+type RouteDefinition = { title: string; description: string; render: () => string };
+
+const routes: Record<string, RouteDefinition> = {
+  '/': { title: 'Caption Salience — Mark uncertain caption words', description: 'Play local SRT and WebVTT captions with separate marks for uncertainty, speakers, and chosen terms.', render: homePage },
+  '/demo': { title: 'Demo — Caption Salience', description: 'Try Caption Salience with five timed sample captions in an isolated demo.', render: playerPage },
+  '/player': { title: 'Player — Caption Salience', description: 'Open local SRT or WebVTT captions and adjust their visible marks.', render: playerPage },
+  '/install': { title: 'Install — Caption Salience', description: 'Download Caption Salience for macOS, Windows, or Linux.', render: installPage },
+  '/privacy': { title: 'Privacy — Caption Salience', description: 'Read what Caption Salience keeps on your device and when it uses the network.', render: () => legalPage('privacy') },
+  '/terms': { title: 'Terms — Caption Salience', description: 'Read the terms for Caption Salience files, licenses, refunds, and warranty.', render: () => legalPage('terms') }
 };
+
+const notFoundRoute: RouteDefinition = {
+  title: 'Page not found — Caption Salience',
+  description: 'This Caption Salience page does not exist.',
+  render: notFoundPage
+};
+
+function currentRoute(): { route: RouteDefinition; canonicalPath: string } {
+  if (demoMode) return { route: routes['/demo'], canonicalPath: '/?demo=1' };
+  const route = routes[location.pathname];
+  return { route: route || notFoundRoute, canonicalPath: route ? location.pathname : '/404' };
+}
+
+function setMeta(name: string, value: string, property = false): void {
+  document.querySelector<HTMLMetaElement>(`meta[${property ? 'property' : 'name'}="${name}"]`)?.setAttribute('content', value);
+}
 
 type RouteRenderOptions = {
   focusHeading?: boolean;
@@ -229,28 +258,38 @@ function saveScrollPosition(): void {
 
 function navigate(path: string): void {
   stopPlayback();
+  const destination = new URL(path, location.origin);
   const previousDemo = demoMode;
-  demoMode = path === '/demo';
+  demoMode = isDemoUrl(destination);
   if (demoMode && (!previousDemo || cues.length === 0)) resetDemoState();
   if (previousDemo && !demoMode) {
     cues = [];
     currentTime = 0;
+    clearAudio();
     preferences = loadPreferences();
   }
   saveScrollPosition();
-  history.pushState({ scrollY: 0 }, '', path);
+  history.pushState({ scrollY: 0 }, '', `${destination.pathname}${destination.search}`);
   renderRoute({ focusHeading: true, scrollY: 0 });
 }
 
 function renderRoute(options: RouteRenderOptions = {}): void {
-  const route = routes[location.pathname];
-  document.title = route?.title || 'Page not found — Caption Salience';
-  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', `https://caption-salience.sociobot.in${route ? location.pathname : '/404'}`);
-  app.innerHTML = route ? route.render() : notFoundPage();
+  const { route, canonicalPath } = currentRoute();
+  document.title = route.title;
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute('href', `https://caption-salience.sociobot.in${canonicalPath}`);
+  setMeta('description', route.description);
+  setMeta('og:title', route.title, true);
+  setMeta('og:description', route.description, true);
+  setMeta('og:url', `https://caption-salience.sociobot.in${canonicalPath}`, true);
+  setMeta('twitter:title', route.title);
+  setMeta('twitter:description', route.description);
+  app.innerHTML = route.render();
   bindGlobal();
-  if (location.pathname === '/demo' || location.pathname === '/player') bindPlayer();
-  if (location.pathname === '/') bindHome();
+  if (demoMode || location.pathname === '/player') bindPlayer();
+  if (location.pathname === '/' && !demoMode) bindHome();
   if (location.pathname === '/install') loadRelease();
+  const routeStatus = document.querySelector<HTMLElement>('#route-status');
+  if (routeStatus) routeStatus.textContent = route.title;
   requestAnimationFrame(() => {
     const heading = document.querySelector<HTMLElement>('h1');
     if (options.focusHeading) heading?.focus({ preventScroll: true });
@@ -262,7 +301,8 @@ function bindGlobal(): void {
   document.querySelectorAll<HTMLAnchorElement>('a[data-route]').forEach((link) => link.addEventListener('click', (event) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    navigate(new URL(link.href).pathname);
+    const destination = new URL(link.href);
+    navigate(`${destination.pathname}${destination.search}`);
   }));
   document.querySelector('#reset-demo')?.addEventListener('click', () => { resetDemoState(); renderRoute(); });
   document.querySelector('#start-real')?.addEventListener('click', () => navigate('/player'));
@@ -279,6 +319,7 @@ function bindHome(): void {
 }
 
 function resetDemoState(): void {
+  clearAudio();
   cues = structuredClone(sampleCues);
   currentTime = 0;
   playing = false;
@@ -381,6 +422,16 @@ function togglePlayback(): void {
 function stopPlayback(): void {
   playing = false;
   cancelAnimationFrame(animation);
+  document.querySelector<HTMLAudioElement>('#local-audio')?.pause();
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+  }
+}
+
+function clearAudio(): void {
+  if (audioUrl) URL.revokeObjectURL(audioUrl);
+  audioUrl = '';
 }
 
 function tick(): void {
@@ -450,13 +501,14 @@ async function loadRelease(): Promise<void> {
     const platform = /Win/i.test(navigator.userAgent) ? 'windows' : /Mac/i.test(navigator.userAgent) ? 'macOS' : 'Linux';
     const match = release.assets.find((asset) => platform === 'windows' ? /\.(msi|exe)$/i.test(asset.name) : platform === 'macOS' ? /\.(dmg|app\.tar\.gz)$/i.test(asset.name) : /\.(AppImage|deb)$/i.test(asset.name));
     if (copy) copy.textContent = `${release.tag_name} is ready for ${platform}.`;
-    if (actions) actions.innerHTML = match ? `<a class="primary" href="${escapeHtml(match.browser_download_url)}">Download for ${platform}</a><a href="${escapeHtml(release.html_url)}">All release files</a>` : `<a class="primary" href="${escapeHtml(release.html_url)}">View files for ${platform}</a>`;
+    if (actions) actions.innerHTML = match ? `<a class="primary" href="${escapeHtml(match.browser_download_url)}" rel="external">Download for ${platform} <span class="external-note">(external)</span></a><a href="${escapeHtml(release.html_url)}" rel="external">All release files <span class="external-note">(external)</span></a>` : `<a class="primary" href="${escapeHtml(release.html_url)}" rel="external">View files for ${platform} <span class="external-note">(external)</span></a>`;
   } catch {
     if (copy) copy.textContent = 'Downloads are being published. Check the release page for current files.';
   }
 }
 
 async function verifyLicense(token: string, announce = false): Promise<void> {
+  if (demoMode) return;
   try {
     const response = await fetch(`https://api.sociobot.in/api/v1/products/caption-salience/verify?license=${encodeURIComponent(token)}`);
     const result = await response.json() as { valid: boolean };
@@ -468,21 +520,32 @@ async function verifyLicense(token: string, announce = false): Promise<void> {
   }
 }
 
-function acceptReturnedLicense(): void {
+function acceptReturnedLicense(): string | null {
+  if (demoMode) return null;
   const url = new URL(location.href);
   const token = url.searchParams.get('license');
-  if (!token) return;
+  if (!token) return null;
   localStorage.setItem(licenseKey, token);
   url.searchParams.delete('license');
   history.replaceState({}, '', url.pathname + url.search);
   void verifyLicense(token);
+  return token;
 }
 
 window.addEventListener('popstate', (event) => {
+  const wasDemo = demoMode;
+  demoMode = isDemoUrl(new URL(location.href));
+  if (demoMode && !wasDemo) resetDemoState();
+  if (wasDemo && !demoMode) {
+    cues = [];
+    currentTime = 0;
+    clearAudio();
+    preferences = loadPreferences();
+  }
   renderRoute({ focusHeading: true, scrollY: typeof event.state?.scrollY === 'number' ? event.state.scrollY : 0 });
 });
 window.addEventListener('keydown', (event) => {
-  if (!['/demo', '/player'].includes(location.pathname) || (event.target as HTMLElement)?.matches('input, textarea')) return;
+  if (!(demoMode || location.pathname === '/player') || (event.target as HTMLElement)?.matches('input, textarea')) return;
   if (event.code === 'Space') { event.preventDefault(); if (cues.length) togglePlayback(); }
   if (event.key === 'ArrowLeft') seek(currentTime - 5);
   if (event.key === 'ArrowRight') seek(currentTime + 5);
@@ -490,16 +553,18 @@ window.addEventListener('keydown', (event) => {
   if (event.key.toLowerCase() === 'k' && cues.length) seek(cues[Math.min(cues.length - 1, activeCueIndex() + 1)].start);
 });
 
-acceptReturnedLicense();
-const storedLicense = localStorage.getItem(licenseKey);
-if (storedLicense) {
-  try {
-    const verdict = JSON.parse(localStorage.getItem(`${licenseKey}:verdict`) || '{}') as { checkedAt?: number };
-    if (!verdict.checkedAt || Date.now() - verdict.checkedAt > 86_400_000) void verifyLicense(storedLicense);
-  } catch { void verifyLicense(storedLicense); }
+if (demoMode) {
+  resetDemoState();
+} else {
+  const returnedLicense = acceptReturnedLicense();
+  const storedLicense = returnedLicense ? null : localStorage.getItem(licenseKey);
+  if (storedLicense) {
+    try {
+      const verdict = JSON.parse(localStorage.getItem(`${licenseKey}:verdict`) || '{}') as { checkedAt?: number };
+      if (!verdict.checkedAt || Date.now() - verdict.checkedAt > 86_400_000) void verifyLicense(storedLicense);
+    } catch { void verifyLicense(storedLicense); }
+  }
 }
-demoMode = location.pathname === '/demo';
-if (demoMode) resetDemoState();
 renderRoute({ focusHeading: true, scrollY: window.scrollY });
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

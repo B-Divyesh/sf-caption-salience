@@ -1,7 +1,7 @@
 [package]
 name = "caption-salience"
-version = "0.1.2"
-description = "A local caption presentation control surface"
+version = "0.1.3"
+description = "A local SRT and WebVTT caption player"
 authors = ["Param Factory"]
 license = "MIT"
 edition = "2021"

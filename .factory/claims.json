@@ -4,104 +4,146 @@
     "claim": "Opens local SRT and WebVTT caption files",
     "where": "landing page, player, README",
     "test": "npm test -- --grep @claim:caption-import",
-    "sandbox": "fresh browser context; upload the shipped WebVTT fixture; assert two rendered cues"
+    "sandbox": "fresh browser context; upload shipped WebVTT and SRT fixtures; assert each parsed cue count, text, and uncertainty mark"
   },
   {
     "id": "supplied-uncertainty",
     "claim": "Marks source-supplied uncertainty, speaker changes, and chosen terms separately",
     "where": "landing preview, player, README",
     "test": "npm test -- --grep @claim:supplied-uncertainty",
-    "sandbox": "fresh browser context at /demo; assert only the annotated token has uncertain semantics"
+    "sandbox": "fresh browser context at /demo; assert the annotated token, speaker, and chosen term have separate visible semantics"
   },
   {
     "id": "local-processing",
     "claim": "Caption files stay on this device",
-    "where": "landing facts, player status, privacy page, README",
+    "where": "landing facts, player, privacy page, README",
     "test": "npm test -- --grep @claim:local-processing",
-    "sandbox": "fresh browser context at /demo; intercept the entire playback flow and assert all requests are same-origin"
+    "sandbox": "fresh browser context at /?demo=1; upload both shipped caption formats, play and adjust controls, and assert no file content or outside request is sent"
   },
   {
     "id": "offline-reload",
     "claim": "Works offline after the first visit",
     "where": "landing facts, README",
     "test": "npm test -- --grep @claim:offline-reload",
-    "sandbox": "fresh browser context at /demo; wait for the service worker, go offline, reload, and assert the player opens"
+    "sandbox": "fresh browser context at /?demo=1; wait for the service worker, go offline, reload, and assert the populated player opens"
   },
   {
     "id": "keyboard-playback",
     "claim": "Playback works with Space and arrow keys",
     "where": "player shortcut line, README",
     "test": "npm test -- --grep @claim:keyboard-playback",
-    "sandbox": "fresh browser context at /demo; use Space and ArrowRight; assert playing state and five-second seek"
+    "sandbox": "fresh browser context at /?demo=1; use Space and ArrowRight; assert playing state and five-second seek"
+  },
+  {
+    "id": "playback-navigation",
+    "claim": "The timer, timeline, cue buttons, and keyboard shortcuts change cues",
+    "where": "landing how-it-works, player",
+    "test": "npm test -- --grep @claim:playback-navigation",
+    "sandbox": "fresh browser context at /?demo=1; assert timer movement, timeline seeking, and cue-button seeking change the displayed cue"
   },
   {
     "id": "core-free",
-    "claim": "Core caption controls are free",
+    "claim": "Caption size, uncertainty, speaker, and chosen-term controls are free",
     "where": "landing facts, paid tier, terms, README",
     "test": "npm test -- --grep @claim:core-free",
-    "sandbox": "fresh browser context at /demo with no license; assert size, uncertainty, speaker, and chosen-term controls are available"
+    "sandbox": "fresh unlicensed browser context; import a caption file and assert all four named controls are available"
   },
   {
     "id": "paid-profiles",
-    "claim": "A ₹499 one-time license adds up to five named setup profiles",
+    "claim": "A ₹499 one-time Sociobot license adds up to five named setup profiles",
     "where": "landing paid tier, player, terms, README",
     "test": "npm test -- --grep @claim:paid-profiles",
-    "sandbox": "fresh browser context with a cached valid fixture verdict; save a named setup and assert the one-of-five count"
+    "sandbox": "recorded billing contract and verification response; accept a returned entitlement, save and load five distinct profiles, reject a sixth, and assert merchant and refund copy"
+  },
+  {
+    "id": "billing-data-flow",
+    "claim": "License verification sends only the returned license token to the Sociobot billing API",
+    "where": "privacy page, README",
+    "test": "npm test -- --grep @claim:billing-data-flow",
+    "sandbox": "record a returned-license verification request; assert one GET to the Sociobot product endpoint with only the encoded token query and no request body"
   },
   {
     "id": "local-audio",
-    "claim": "Adds local audio for caption timing without uploading it",
-    "where": "landing how-it-works, player, README",
+    "claim": "Local audio drives caption timing without being uploaded",
+    "where": "landing how-it-works, player, privacy, README",
     "test": "npm test -- --grep @claim:local-audio",
-    "sandbox": "fresh browser context at /demo; add a fixture audio file, assert the status, and intercept outside requests"
+    "sandbox": "fresh browser context at /?demo=1; load the shipped valid WAV, play it, seek its media time across a cue boundary, and assert no outside request"
   },
   {
     "id": "microphone-captions",
     "claim": "Shows optional microphone captions when the device speech service is available",
     "where": "player, privacy, README",
     "test": "npm test -- --grep @claim:microphone-captions",
-    "sandbox": "fresh browser context with a fixture SpeechRecognition engine; assert the transcript and its supplied confidence render"
+    "sandbox": "fresh browser context with a fixture SpeechRecognition engine; assert transcript words and supplied confidence render"
   },
   {
     "id": "local-preferences",
     "claim": "Keeps display settings and chosen terms in browser storage",
     "where": "privacy page, README",
     "test": "npm test -- --grep @claim:local-preferences",
-    "sandbox": "fresh browser context; change the real-mode caption size, reload, and assert the saved value"
+    "sandbox": "fresh real-mode browser context; change caption size, reload, and assert the saved value"
   },
   {
-    "id": "demo-memory",
-    "claim": "Demo sample data is not saved and is discarded when you leave",
+    "id": "demo-isolation",
+    "claim": "Demo sample data is isolated, not saved, and discarded on exit",
     "where": "demo banner, README, demo contract",
-    "test": "npm test -- --grep @claim:demo-memory",
-    "sandbox": "fresh browser context; change a demo setting, leave demo mode, and assert no demo setting or cue persists in real mode"
+    "test": "npm test -- --grep @claim:demo-isolation",
+    "sandbox": "preseed every real storage key; open /?demo=1 with a license parameter, exercise Reset and exit, and assert byte-for-byte unchanged real storage with no outside request"
+  },
+  {
+    "id": "demo-five-cues",
+    "claim": "The one-click demo opens five realistic timed captions",
+    "where": "landing first screen, demo contract",
+    "test": "npm test -- --grep @claim:demo-five-cues",
+    "sandbox": "fresh browser context; click the first-screen sample action once and assert five populated timed cues and the demo banner"
+  },
+  {
+    "id": "annotation-syntax",
+    "claim": "WebVTT low and numeric confidence tags plus SRT question tags supply uncertainty below 70 percent",
+    "where": "player empty state, README",
+    "test": "npm test -- --grep @claim:annotation-syntax",
+    "sandbox": "upload shipped WebVTT fixtures for low, 42, 69, and 70 percent plus an SRT question-tag fixture; assert only values below 70 percent are marked"
   },
   {
     "id": "no-hearing-diagnosis",
     "claim": "Does not diagnose hearing loss",
     "where": "landing limits",
     "test": "npm test -- --grep @claim:no-hearing-diagnosis",
-    "sandbox": "fresh browser context; assert the limits section states the boundary and the player exposes caption controls rather than a diagnosis result"
+    "sandbox": "fresh browser context; assert the boundary and caption controls instead of any diagnosis result"
   },
   {
     "id": "no-caption-extraction",
     "claim": "Does not extract video or protected captions",
     "where": "landing limits",
     "test": "npm test -- --grep @claim:no-caption-extraction",
-    "sandbox": "fresh browser context; assert the stated boundary and that the only caption import control accepts local SRT and WebVTT files"
+    "sandbox": "fresh browser context; assert the boundary and that the only caption import accepts local SRT and WebVTT files"
   },
   {
     "id": "no-invented-confidence",
     "claim": "Does not invent confidence scores",
     "where": "landing limits, README",
     "test": "npm test -- --grep @claim:no-invented-confidence",
-    "sandbox": "fresh browser context; upload an ordinary WebVTT fixture without confidence annotations and assert no uncertainty mark is rendered"
+    "sandbox": "fresh browser context; upload an ordinary WebVTT fixture without annotations and assert no uncertainty mark"
   },
   {
     "id": "no-tracking",
     "claim": "Has no analytics, advertising, accounts, or tracking cookies",
     "where": "privacy page, README",
     "test": "npm test -- --grep @claim:no-tracking",
-    "sandbox": "fresh browser context; visit landing and demo, assert all requests are same-origin and the browser has no cookies or account controls"
+    "sandbox": "fresh browser context; visit landing and demo, assert all requests are same-origin and there are no cookies or account controls"
+  },
+  {
+    "id": "desktop-release",
+    "claim": "Version tags build unsigned macOS, Windows, and Linux packages with SHA256SUMS and latest.json",
+    "where": "README, install page",
+    "test": "npm test -- --grep @claim:desktop-release",
+    "sandbox": "read the release workflow; fetch the latest public GitHub release; assert all platforms and download both release metadata files with checksum entries"
+  },
+  {
+    "id": "installer-release-resolution",
+    "claim": "The Install page reads the GitHub release API and links to the release page when it fails",
+    "where": "README, install page",
+    "test": "npm test -- --grep @claim:installer-release-resolution",
+    "sandbox": "record the requested GitHub API URL, serve a release fixture, then return 503 and assert the fallback points to a live release page"
   }
 ]

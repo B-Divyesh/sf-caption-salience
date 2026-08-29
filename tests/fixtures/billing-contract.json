@@ -1,0 +1,9 @@
+{
+  "product": "caption-salience",
+  "amount": 499,
+  "currency": "INR",
+  "purchase": "one-time",
+  "merchant": "Sociobot",
+  "checkout": "https://api.sociobot.in/api/v1/products/caption-salience/checkout",
+  "verify": "https://api.sociobot.in/api/v1/products/caption-salience/verify"
+}
