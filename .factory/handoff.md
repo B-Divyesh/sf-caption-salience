@@ -1,3 +1,36 @@
+# Caption Salience review 2 handoff
+
+## Review 2 result
+
+Independent adversarial review 2 is **PASS** with zero findings. The complete
+record is in `.factory/review-2.md`. No product code was modified for this
+review.
+
+Review 2 verified fresh live 390 × 844 and desktop contexts, one-click demo
+behavior, seeded real-storage isolation, request logs, all claim commands from
+a fresh clone, previous-finding closure, routes, links, direct metadata, the
+404, accessibility coverage, and the visual identity.
+
+### Review 2 verification
+
+```sh
+npm ci
+npm test
+npm run build
+```
+
+- All 21 claim commands passed separately from a fresh clone, with two browser
+  project passes per claim.
+- `npm test` passed: 4 unit tests and 59 browser tests; three expected skips
+  are mobile-only checks run in the desktop project.
+- `npm run build` passed; the JavaScript entry is 30.58 kB raw / 10.40 kB gzip.
+- Cold live requests were same-origin and console-error-free. The seeded demo
+  storage check preserved all real keys byte-for-byte through reset and exit.
+- No known gaps remain. Repeat the full claim and adversarial review after
+  future copy, storage, billing, release, or routing changes.
+
+---
+
 # Caption Salience polish round 1 handoff
 
 Polish round 1 closes all 36 findings in `.factory/review-1.md`. No earlier review or polish files exist. The static site is deployed at <https://caption-salience.sociobot.in>, and the Tauri desktop app remains the product artifact.
