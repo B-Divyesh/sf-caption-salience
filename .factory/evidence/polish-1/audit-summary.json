@@ -1,0 +1,47 @@
+{
+  "date": "2026-08-29",
+  "local_lighthouse": {
+    "performance": 100,
+    "accessibility": 100,
+    "best_practices": 100,
+    "seo": 100,
+    "lcp": "1.7 s",
+    "cls": 0,
+    "total_blocking_time": "20 ms"
+  },
+  "live_lighthouse": {
+    "performance": 100,
+    "accessibility": 100,
+    "best_practices": 100,
+    "seo": 100,
+    "lcp": "1.2 s",
+    "cls": 0,
+    "total_blocking_time": "20 ms"
+  },
+  "live_axe_cli": {
+    "version": "4.10.3",
+    "routes": ["/", "/?demo=1", "/privacy", "/terms", "/install"],
+    "violations": 0
+  },
+  "clean_clone": {
+    "path": "/tmp/caption-salience-clean-RMkMvj",
+    "commit": "d8d3033d81161fd6e5c525d56b7f0812a29709a0",
+    "claim_commands": 21,
+    "result": "all passed in desktop and 390px browser projects"
+  },
+  "full_suite": {
+    "vitest_passed": 4,
+    "playwright_passed": 59,
+    "playwright_expected_skips": 3,
+    "playwright_total": 62
+  },
+  "release": {
+    "tag": "v0.1.3",
+    "workflow_run": 33231124503,
+    "workflow_result": "success",
+    "platform_assets": 9,
+    "manifest": "valid latest.json with macos-arm64, macos-x64, windows, and linux URLs",
+    "downloaded_deb_sha256": "41d20a7d46d15e323c322217a09bf3f0526294b112a2fcbe9b051305a5d5fabe",
+    "checksum_result": "matched SHA256SUMS"
+  }
+}

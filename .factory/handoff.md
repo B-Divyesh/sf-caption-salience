@@ -1,47 +1,61 @@
-# Caption Salience adversarial review 1 handoff — FAIL
+# Caption Salience polish round 1 handoff
 
-Reviewed the live site and clean commit
-`2b5ea58b86ba5a3f9495f16c32147aeb97c452c9` on 2026-08-29. The complete report
-is in `.factory/review-1.md`. Product code was not changed.
+Polish round 1 closes all 36 findings in `.factory/review-1.md`. No earlier review or polish files exist. The static site is deployed at <https://caption-salience.sociobot.in>, and the Tauri desktop app remains the product artifact.
 
-## What was done
+## What changed
 
-- Captured cold 390 × 844 and 1440 × 900 first screens before scrolling.
-- Audited every landing-page and README copy unit with word counts.
-- Exercised the one-click demo, Reset, Start for real, storage isolation, request
-  logging, and live offline reload.
-- Ran all 15 claim commands separately from a clean clone.
-- Re-ran the full test suite and production build.
-- Checked route status/title/h1/metadata, deep navigation, focus/back behavior,
-  404 handling, mobile overflow, link status, and live accessibility.
-- Read the prior handoff; no earlier review or polish files exist.
+- Rewrote the first screen and every flagged label in plain words while retaining the acoustic instrument-panel design.
+- Made `/?demo=1` the one-click sample entry. Demo mode is selected before storage access, ignores real licenses and preferences, makes no verification request, and clears its file/audio state on reset or exit.
+- Expanded `.factory/claims.json` to 21 claims with exactly one tagged test each. Tests now exercise both caption formats, actual caption-file privacy, playable WAV timing, all five profiles and the sixth-profile limit, billing requests, annotation boundaries, release files, and installer fallback.
+- Added three original captioned screenshots of the built desktop interface.
+- Added route announcements and route-specific title, description, canonical, Open Graph, and Twitter metadata in both runtime navigation and generated deep-route HTML.
+- Repaired 404 wording, external-link labels, legal wording, mobile first-screen coverage, and all terminology issues.
+- Bumped the app to 0.1.3 and published tag `v0.1.3` for the macOS, Windows, and Linux release workflow.
+
+The exact finding-by-finding map is in `.factory/polish-1.md`. Demo details are in `.factory/demo.md`; the reviewed copy and terminology are in `.factory/copy-audit.md`.
 
 ## Verification
 
+Run from Node.js 22 with Playwright 1.58.2:
+
 ```sh
 npm ci
+npx tsc --noEmit
 npm test
 npm run build
-VERIFY_NODE_MODULES=/work/repo/node_modules \
-  /opt/fleet/lib/verify-url.sh https://caption-salience.sociobot.in <temp-dir>
+npm run verify:billing
+cargo check --manifest-path src-tauri/Cargo.toml
+cargo test --manifest-path src-tauri/Cargo.toml
+CI=true npx tauri build --bundles deb
 ```
 
-- All 15 individual claim commands: exit 0, 2 browser projects passed each.
-- Full suite: 4 unit tests and 42 end-to-end tests passed; 2 expected
-  desktop-project skips for mobile-only tests.
-- Build: passed; JavaScript was 27.29 kB / 9.72 kB gzip.
-- Live axe scan: zero violations on `/`, `/demo`, `/player`, `/install`,
-  `/privacy`, and `/terms` at 390 px.
-- Link crawl: all discovered links resolved; unknown routes returned the styled
-  404.
+Results:
 
-## What remains
+- Fresh clone `/tmp/caption-salience-clean-RMkMvj`: all 21 exact claim commands passed, with two browser-project passes per claim.
+- Full suite: 4 Vitest tests passed; Playwright reported 59 passes and 3 expected desktop skips across 62 checks.
+- Build: `dist/site/` produced 30.58 kB JavaScript (10.40 kB gzip) and 18.73 kB CSS (4.85 kB gzip).
+- Native: Cargo check/tests passed; `Caption Salience_0.1.3_amd64.deb` built at 3,059,170 bytes. The app stayed running under Xvfb for eight seconds with no stderr.
+- Billing: the registered ₹499 checkout returned a Dodo session redirect.
+- Live `verify-url.sh`: 859 ms load, no console errors, valid title/lang/h1/main/image-alt/button-name checks.
+- Live/local application JavaScript SHA-256 matched at `75611b79be015b69697da65f3ce476264272c8ae9851d56cc89b0bac516766e7`; `release-identity.json` reports app 0.1.3 and repair commit `d8d3033d81161fd6e5c525d56b7f0812a29709a0`.
+- Live Axe CLI: zero violations on five tested routes.
+- Live Lighthouse mobile: 100 performance, 100 accessibility, 100 best practices, 100 SEO; LCP 1.2 s, CLS 0, TBT 20 ms.
+- Cold live browser audit: isolated seeded demo, Reset, exit, SRT import, valid local-audio timing, all route metadata, 390px overflow, and real 404 status passed.
+- Release run `33231124503` succeeded. Public `v0.1.3` contains nine macOS/Windows/Linux packages, `latest.json`, and `SHA256SUMS`. The downloaded DEB matched SHA-256 `41d20a7d46d15e323c322217a09bf3f0526294b112a2fcbe9b051305a5d5fabe`.
 
-The review records 36 findings. Six are blocking: demo mode reads and writes a
-real license verdict and sends the stored token externally; SRT import is not
-covered by its claim test; caption-file privacy is not tested with a file;
-audio timing is tested with invalid audio and no timing assertion; the paid
-five-profile/₹499 claim is not proved; and the desktop landing page lacks the
-required screenshot walkthrough. Unlisted claims, imprecise copy, missing route
-announcement behavior, stale deep-route social metadata, and external-link
-labels are also detailed in the report.
+Evidence is under `.factory/evidence/polish-1/`.
+
+## Deployment and release
+
+- Static deploy: `/opt/fleet/lib/deploy-static.sh caption-salience dist/site` succeeded.
+- Public site: <https://caption-salience.sociobot.in>.
+- Release workflow: <https://github.com/B-Divyesh/sf-caption-salience/actions/runs/33231124503>.
+- Desktop release: <https://github.com/B-Divyesh/sf-caption-salience/releases/tag/v0.1.3>.
+
+## Known gaps
+
+None in the requested scope.
+
+## Needs operator action
+
+The published desktop packages are intentionally unsigned. Apple notarization and Windows Authenticode require owner certificates (`APPLE_CERTIFICATE` and `WINDOWS_CERT_PFX`) if signed packages are desired later.

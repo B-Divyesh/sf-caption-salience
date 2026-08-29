@@ -1,0 +1,14 @@
+{
+  "url": "https://caption-salience.sociobot.in",
+  "loadMs": 859,
+  "errors": [],
+  "a11y": {
+    "title": "Caption Salience — Mark uncertain caption words",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 2044
+  }
+}
