@@ -1,28 +1,47 @@
-# Caption Salience verification handoff — PASS
+# Caption Salience adversarial review 1 handoff — FAIL
 
-Independent QA accepted candidate `2cccd021ffa11a5f7ac3d606033cbd6f88a35665`
-at <https://caption-salience.sociobot.in> on 2026-08-29.
+Reviewed the live site and clean commit
+`2b5ea58b86ba5a3f9495f16c32147aeb97c452c9` on 2026-08-29. The complete report
+is in `.factory/review-1.md`. Product code was not changed.
 
-The live release identity names that exact candidate and its deployed JS hash
-matches the clean local production build. All 15 declared claim commands,
-type check, full tests, static build, Rust checks/tests, native Debian package
-build, billing registration, live accessibility checks, offline reload, and
-installer checksum flow passed. No release-blocking defects were found.
+## What was done
 
-Run locally:
+- Captured cold 390 × 844 and 1440 × 900 first screens before scrolling.
+- Audited every landing-page and README copy unit with word counts.
+- Exercised the one-click demo, Reset, Start for real, storage isolation, request
+  logging, and live offline reload.
+- Ran all 15 claim commands separately from a clean clone.
+- Re-ran the full test suite and production build.
+- Checked route status/title/h1/metadata, deep navigation, focus/back behavior,
+  404 handling, mobile overflow, link status, and live accessibility.
+- Read the prior handoff; no earlier review or polish files exist.
+
+## Verification
 
 ```sh
 npm ci
 npm test
 npm run build
-CI=true npx tauri build --bundles deb
+VERIFY_NODE_MODULES=/work/repo/node_modules \
+  /opt/fleet/lib/verify-url.sh https://caption-salience.sociobot.in <temp-dir>
 ```
 
-The static output is `dist/site/`. The full independent evidence, including
-rate-limit results (29 successful invalid verification requests then 429 with
-`Retry-After: 3`), is in `.factory/verification-4.md`.
+- All 15 individual claim commands: exit 0, 2 browser projects passed each.
+- Full suite: 4 unit tests and 42 end-to-end tests passed; 2 expected
+  desktop-project skips for mobile-only tests.
+- Build: passed; JavaScript was 27.29 kB / 9.72 kB gzip.
+- Live axe scan: zero violations on `/`, `/demo`, `/player`, `/install`,
+  `/privacy`, and `/terms` at 390 px.
+- Link crawl: all discovered links resolved; unknown routes returned the styled
+  404.
 
-Known gap: PowerShell is unavailable in this Linux verification container, so
-`install.ps1` was statically inspected rather than executed. The POSIX
-installer was executed in an isolated directory and verified the public
-AppImage checksum.
+## What remains
+
+The review records 36 findings. Six are blocking: demo mode reads and writes a
+real license verdict and sends the stored token externally; SRT import is not
+covered by its claim test; caption-file privacy is not tested with a file;
+audio timing is tested with invalid audio and no timing assertion; the paid
+five-profile/₹499 claim is not proved; and the desktop landing page lacks the
+required screenshot walkthrough. Unlisted claims, imprecise copy, missing route
+announcement behavior, stale deep-route social metadata, and external-link
+labels are also detailed in the report.
